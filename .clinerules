@@ -1,0 +1,193 @@
+# Next.js アプリケーション開発ルール（Cline用）
+
+あなたはアプリケーションに取り組むエキスパートNext.js開発者です。コードの生成、編集、レビューの際は、これらのルールを厳密に守ってください。
+
+## プロジェクト概要
+- **フレームワーク**: Next.js 15.3.2 with App Router
+- **React**: Version 19.0.0
+- **TypeScript**: Strict mode enabled
+- **スタイリング**: Tailwind CSS v4 + shadcn/ui components
+- **UIアイコン**: Lucide React v0.511.0
+- **ユーティリティ**: class-variance-authority, clsx, tailwind-merge
+
+## コードスタイル & フォーマット
+
+### Prettier設定（設定通りに正確に）
+```json
+{
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "jsxSingleQuote": false,
+  "bracketSameLine": false
+}
+```
+
+### ESLintルール（既存設定に従う）
+- コード提出前にESLintエラーを修正する
+- 可能な限りletよりもconstを使用する
+- 未使用の変数を削除する（意図的に未使用の場合は_を接頭辞にする）
+- 意味のある変数名と関数名を使用する
+- `any`型を避け、適切なTypeScript型を使用する
+- JSXファイルでReactをインポートしない（Next.jsが自動処理）
+
+## TypeScriptガイドライン
+
+### Strict設定
+```json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "strict": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+### 型定義
+- `src/types/`ディレクトリにinterface/type定義を作成する（必要に応じて）
+- 厳密な型付けを使用し、`any`を避ける
+- 適切な場合はenumよりもtype unionsを使用する
+- 読み取り専用データにはconst assertionsを使用する
+
+### 関数シグネチャ
+```typescript
+// 良い例
+interface UserProps {
+  id: string;
+  name: string;
+  email: string;
+}
+
+const UserCard = ({ id, name, email }: UserProps): JSX.Element => {
+  return <div>...</div>;
+};
+
+// 悪い例
+const UserCard = (props: any) => {
+  return <div>...</div>;
+};
+```
+
+## プロジェクト構造（現在の構造に正確に）
+
+```
+src/
+├── app/                  # Next.js App Routerページ
+│   ├── page.tsx         # ホームページ
+│   ├── layout.tsx       # ルートレイアウト
+│   └── globals.css      # グローバルスタイル
+├── components/          # 再利用可能なUIコンポーネント
+│   ├── ui/             # shadcn/uiベースコンポーネント
+│   └── layout/         # レイアウトコンポーネント
+├── lib/                # ユーティリティ関数
+│   └── utils.ts        # shadcn/ui用ユーティリティ
+└── types/              # TypeScript型定義（必要に応じて）
+```
+
+### 命名規則
+- **ファイル**: kebab-case (`user-profile.tsx`)
+- **コンポーネント**: PascalCase (`UserProfile`)
+- **関数/変数**: camelCase (`getCurrentUser`)
+- **定数**: UPPER_SNAKE_CASE (`API_BASE_URL`)
+- **型/インターフェース**: PascalCase (`UserProfile`, `ApiResponse`)
+
+## React/Next.jsベストプラクティス
+
+### コンポーネント構造
+- フックを使用した関数コンポーネントを使用する
+- コンポーネントを小さく集中的に保つ（単一責任）
+- 再利用可能なロジックのためのカスタムフックを抽出する
+- 重いコンポーネントには`React.memo()`を使用する
+
+### Next.js App Router (v15)
+- 適切なファイルベースルーティング規則を使用する
+- `loading.tsx`と`error.tsx`ページを実装する
+- デフォルトでサーバーコンポーネント、必要時にクライアントコンポーネントを使用
+- 画像にはNext.js Imageコンポーネントを活用する
+
+### 状態管理
+- **ローカル状態**: useState、useReducer
+- **フォーム状態**: 適切な状態管理を実装
+- **グローバル状態**: `src/providers/`のReactコンテキスト（必要に応じて）
+
+## shadcn/ui & スタイリング
+
+### Tailwind CSS v4 PostCSS設定
+- **重要**: Tailwind CSS v4では`@tailwindcss/postcss`パッケージが必要
+- `postcss.config.mjs`で`['@tailwindcss/postcss']`を使用する
+- 従来の`'tailwindcss'`プラグインは使用しない
+
+### shadcn/uiコンポーネント
+- `npx shadcn@latest add [component]`でコンポーネントを追加
+- `src/components/ui/`ディレクトリにコンポーネントを配置
+- `tailwind-merge`と`class-variance-authority`を活用
+- `lucide-react`アイコンを使用
+
+### Tailwind CSS
+- ユーティリティクラスを優先して使用
+- カスタムコンポーネントでは`cn()`ヘルパーを使用
+- レスポンシブデザインを考慮
+- `src/app/globals.css`でTailwind CSS v4の新しい`@import "tailwindcss"`形式を使用
+
+### 例パターン
+```typescript
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface ComponentProps {
+  className?: string;
+  children: React.ReactNode;
+}
+
+export function Component({ className, children }: ComponentProps) {
+  return (
+    <Card className={cn('w-full', className)}>
+      <CardHeader>
+        <CardTitle>タイトル</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## エラーハンドリング
+
+### クライアントサイド
+- コンポーネントレベルのエラーにはエラーバウンダリを使用する
+- 適切なローディングとエラー状態を実装する
+- ユーザーフレンドリーなエラーメッセージを表示する
+
+### サーバーサイド
+- 十分なコンテキストでエラーをログに記録する
+- 適切なHTTPステータスコードを返す
+- エラーメッセージで機密情報を公開しない
+
+## パフォーマンス最適化
+- `React.memo()`を適切に使用する
+- 適切なローディング状態を実装する
+- Next.js Imageコンポーネントを使用する
+- 適切な場合にコンポーネントを遅延読み込みする
+- 動的インポートでバンドルサイズを最適化する
+
+## コードレビューチェックリスト
+- [ ] コードがフォーマットルールに従っている（Prettier）
+- [ ] ESLintエラーや警告がない
+- [ ] 適切なTypeScript型付け
+- [ ] エラーハンドリングが実装されている
+- [ ] パフォーマンスが考慮されている
+- [ ] 必要に応じてドキュメントが更新されている
+
+実装では常にコード品質、保守性、ユーザーエクスペリエンスを優先してください。

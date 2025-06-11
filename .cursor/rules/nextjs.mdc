@@ -1,0 +1,194 @@
+---
+description: 
+globs: *.tsx,*ts,*json,*md
+alwaysApply: false
+---
+# Next.js アプリケーション開発ルール
+
+あなたはNext.jsアプリケーションに取り組むエキスパート開発者です。コードの生成、編集、レビューの際は、これらのルールを厳密に守ってください。
+
+## プロジェクトコンテキスト
+- Next.js 15+ with App Router
+- TypeScript strict mode
+- Tailwind CSS（スタイリング用）
+- shadcn/ui（UIコンポーネント用）
+- Lucide React（アイコン用）
+
+## コードスタイル & フォーマット
+
+### Prettier設定（これらのルールで自動フォーマット）
+```json
+{
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "jsxSingleQuote": false,
+  "bracketSameLine": false
+}
+```
+
+### 従うべきESLintルール
+- コード提出前に常にESLintエラーを修正する
+- 可能な限りletよりもconstを選択する
+- 未使用の変数を削除する（意図的に未使用の場合は_を接頭辞にする）
+- 意味のある変数名と関数名を使用する
+- any型を避け、適切なTypeScript型を使用する
+- JSXファイルでReactをインポートしない（Next.jsが処理する）
+
+## TypeScriptガイドライン
+
+### 型定義
+- 共有される場合は別ファイルでinterface/type定義を作成する
+- 厳密な型付けを使用し、anyを避ける
+- 適切な場合はenumよりもtype unionsを選択する
+- 読み取り専用データにはconst assertionsを使用する
+- 必要に応じてtypes/ディレクトリから型をエクスポートする
+
+### 関数シグネチャ
+- 複雑な関数には明示的な戻り値の型を使用する
+- シンプルなコールバックにはアロー関数を選択する
+- メインコンポーネント関数には関数宣言を使用する
+
+### 例:
+```typescript
+// 良い例
+interface UserProps {
+  id: string;
+  name: string;
+  email: string;
+}
+
+const UserCard = ({ id, name, email }: UserProps): JSX.Element => {
+  return <div>...</div>;
+};
+
+// 悪い例
+const UserCard = (props: any) => {
+  return <div>...</div>;
+};
+```
+
+## React/Next.jsベストプラクティス
+
+### コンポーネント構造
+- フックを使用した関数コンポーネントを使用する
+- コンポーネントを小さく集中的に保つ（単一責任）
+- 再利用可能なロジックのためのカスタムフックを抽出する
+- 重いコンポーネントにはReact.memo()を使用する
+
+### Next.js App Router
+- 適切なファイルベースルーティング規則を使用する
+- loading.tsxとerror.tsxページを実装する
+- デフォルトでサーバーコンポーネント、必要時にクライアントコンポーネントを使用
+- 画像にはNext.js Imageコンポーネントを活用する
+
+### 状態管理
+- ローカル状態にはuseStateを使用する
+- フォーム状態には適切な状態管理を実装する
+- 真にグローバルな状態にのみReactコンテキストを慎重に使用する
+
+## shadcn/ui & スタイリング
+
+### shadcn/uiコンポーネント
+- `npx shadcn@latest add [component]`でコンポーネントを追加
+- `src/components/ui/`ディレクトリにコンポーネントを配置
+- `tailwind-merge`と`class-variance-authority`を活用
+- `lucide-react`アイコンを使用
+
+### Tailwind CSS
+- ユーティリティクラスを優先して使用
+- カスタムコンポーネントでは`cn()`ヘルパーを使用
+- レスポンシブデザインを考慮
+
+### コンポーネント例:
+```typescript
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface ComponentProps {
+  className?: string;
+  children: React.ReactNode;
+}
+
+export function Component({ className, children }: ComponentProps) {
+  return (
+    <Card className={cn('w-full', className)}>
+      <CardHeader>
+        <CardTitle>タイトル</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## ファイル組織
+
+### ディレクトリ構造
+```
+src/
+├── app/                  # Next.js App Routerページ
+├── components/           # 再利用可能なUIコンポーネント
+│   ├── ui/              # shadcn/uiコンポーネント
+│   └── layout/          # レイアウトコンポーネント
+└── lib/                 # ユーティリティ関数
+```
+
+### 命名規則
+- ファイル: kebab-case (user-profile.tsx)
+- コンポーネント: PascalCase (UserProfile)
+- 関数/変数: camelCase (getCurrentUser)
+- 定数: UPPER_SNAKE_CASE (API_BASE_URL)
+- 型/インターフェース: PascalCase (UserProfile, ApiResponse)
+
+## インポート組織
+```typescript
+// 1. 外部ライブラリ
+import React from 'react';
+import { NextRequest } from 'next/server';
+
+// 2. 内部モジュール（絶対インポート推奨）
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+// 3. 相対インポート
+import './component.css';
+```
+
+## エラーハンドリング
+
+### クライアントサイド
+- コンポーネントレベルのエラーにはエラーバウンダリを使用する
+- 適切なローディングとエラー状態を実装する
+- ユーザーフレンドリーなエラーメッセージを表示する
+
+### サーバーサイド
+- 十分なコンテキストでエラーをログに記録する
+- 適切なHTTPステータスコードを返す
+- エラーメッセージで機密情報を公開しない
+
+## パフォーマンス最適化
+- React.memo()を適切に使用する
+- 適切なローディング状態を実装する
+- Next.js Imageコンポーネントを使用する
+- 適切な場合にコンポーネントを遅延読み込みする
+- 動的インポートでバンドルサイズを最適化する
+
+## コードレビューチェックリスト
+- [ ] コードがフォーマットルールに従っている（Prettier）
+- [ ] ESLintエラーや警告がない
+- [ ] 適切なTypeScript型付け
+- [ ] エラーハンドリングが実装されている
+- [ ] パフォーマンスが考慮されている
+- [ ] 必要に応じてドキュメントが更新されている
+
+実装では常にコード品質、保守性、ユーザーエクスペリエンスを優先してください。
