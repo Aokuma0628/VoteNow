@@ -2,9 +2,15 @@ name: Code Quality
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ develop ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/code-quality.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ develop ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/code-quality.yml'
 
 jobs:
   lint-and-format:
