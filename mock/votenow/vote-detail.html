@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投票詳細 - VoteNow</title>
+    <meta name="description" content="投票の詳細確認と参加ページ">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='2'><path d='M9 12l2 2 4-4'/><circle cx='12' cy='12' r='9'/></svg>">
+    
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Chart.js for results -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="min-h-screen transition-all duration-300 bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50 text-stone-800" id="body">
+    <!-- ヘッダー -->
+    <header class="backdrop-blur-md border-b transition-all duration-300 bg-white/80 border-stone-200/60 sticky top-0 z-40" id="header">
+        <div class="max-w-6xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- ロゴ・戻るボタン -->
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="p-2 rounded-md transition-all duration-300 text-stone-500 hover:text-stone-700 hover:bg-stone-100" aria-label="ホームに戻る">
+                        <i data-lucide="arrow-left" class="h-5 w-5"></i>
+                    </a>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-100 border border-emerald-200">
+                            <i data-lucide="vote" class="h-4 w-4 text-emerald-600"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-semibold text-stone-800">VoteNow</h1>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側ボタン -->
+                <div class="flex items-center gap-2">
+                    <!-- 共有ボタン -->
+                    <button id="share-btn" class="p-2 rounded-md transition-all duration-300 text-stone-500 hover:text-stone-700 hover:bg-stone-100" aria-label="共有">
+                        <i data-lucide="share-2" class="h-4 w-4"></i>
+                    </button>
+                    
+                    <!-- テーマ切り替えボタン -->
+                    <button id="theme-toggle" class="p-2 rounded-md transition-all duration-300 text-stone-500 hover:text-stone-700 hover:bg-stone-100" aria-label="テーマ切り替え">
+                        <i data-lucide="moon" class="h-4 w-4" id="theme-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-4xl mx-auto px-6 py-8">
+        <!-- ローディング状態 -->
+        <div id="loading-state" class="animate-pulse">
+            <div class="stat-card mb-8">
+                <div class="h-6 bg-stone-200 rounded mb-4"></div>
+                <div class="h-4 bg-stone-200 rounded mb-2 w-3/4"></div>
+                <div class="h-4 bg-stone-200 rounded w-1/2"></div>
+            </div>
+            <div class="stat-card">
+                <div class="space-y-4">
+                    <div class="h-12 bg-stone-200 rounded"></div>
+                    <div class="h-12 bg-stone-200 rounded"></div>
+                    <div class="h-12 bg-stone-200 rounded"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- エラー状態 -->
+        <div id="error-state" class="text-center py-16 hidden">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 bg-red-100 border border-red-200">
+                <i data-lucide="alert-circle" class="h-8 w-8 text-red-600"></i>
+            </div>
+            <h3 class="text-lg font-medium mb-2 text-stone-600">投票が見つかりません</h3>
+            <p class="text-sm text-stone-400 mb-4">指定された投票は存在しないか、削除された可能性があります</p>
+            <a href="index.html" class="btn-primary">
+                ホームに戻る
+            </a>
+        </div>
+
+        <!-- 投票詳細コンテンツ -->
+        <div id="poll-content" class="hidden">
+            <!-- 投票情報ヘッダー -->
+            <section class="stat-card mb-8" id="poll-header">
+                <!-- 投票タイトル・説明がここに動的生成 -->
+            </section>
+
+            <!-- 投票エリア / 結果エリア -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- メイン投票/結果エリア -->
+                <div class="lg:col-span-2">
+                    <!-- 投票フォーム -->
+                    <div id="voting-form" class="stat-card hidden">
+                        <h3 class="text-lg font-semibold mb-6 text-stone-800">投票してください</h3>
+                        <form id="vote-form" class="space-y-4">
+                            <div id="options-container">
+                                <!-- 投票オプションがここに動的生成 -->
+                            </div>
+                            
+                            <div class="flex justify-center pt-4">
+                                <button type="submit" class="btn-primary px-8" id="vote-submit-btn" disabled>
+                                    <i data-lucide="check" class="h-4 w-4 mr-2"></i>
+                                    投票する
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 投票済み表示 -->
+                    <div id="voted-display" class="stat-card hidden">
+                        <div class="text-center py-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 bg-emerald-100 border border-emerald-200">
+                                <i data-lucide="check-circle" class="h-8 w-8 text-emerald-600"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2 text-stone-800">投票ありがとうございました！</h3>
+                            <p class="text-sm text-stone-600 mb-4">あなたの投票が記録されました</p>
+                            <div id="user-vote-display" class="text-sm text-stone-500">
+                                <!-- ユーザーの投票内容がここに表示 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 結果表示エリア -->
+                    <div id="results-display" class="stat-card">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-stone-800">投票結果</h3>
+                            <button id="refresh-results-btn" class="btn-secondary text-sm" title="結果を更新">
+                                <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- チャート表示 -->
+                        <div class="mb-8">
+                            <canvas id="results-chart" class="max-h-64"></canvas>
+                        </div>
+                        
+                        <!-- 詳細結果リスト -->
+                        <div id="detailed-results" class="space-y-4">
+                            <!-- 詳細結果がここに動的生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- サイドバー -->
+                <div class="space-y-6">
+                    <!-- 投票統計 -->
+                    <div class="stat-card">
+                        <h4 class="font-semibold mb-4 text-stone-800">投票統計</h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-stone-600">総投票数</span>
+                                <span class="font-semibold" id="total-votes-count">0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-stone-600">選択肢数</span>
+                                <span class="font-semibold" id="options-count">0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-stone-600">投票方式</span>
+                                <span class="text-sm font-medium" id="vote-type">単一選択</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 時間情報 -->
+                    <div class="stat-card" id="time-info">
+                        <h4 class="font-semibold mb-4 text-stone-800">時間情報</h4>
+                        <div class="space-y-3" id="time-details">
+                            <!-- 時間詳細がここに動的生成 -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 確認モーダル -->
+    <div id="vote-confirmation-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg max-w-md w-full p-6 stat-card">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-blue-100 border border-blue-200">
+                    <i data-lucide="help-circle" class="h-6 w-6 text-blue-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">投票を確定しますか？</h3>
+                <p class="text-sm text-stone-600 mb-2">選択した内容で投票を行います。</p>
+                <div id="vote-summary" class="text-sm bg-stone-50 p-3 rounded-lg mb-4">
+                    <!-- 投票内容のサマリー -->
+                </div>
+                <div class="flex gap-3">
+                    <button id="cancel-vote-btn" class="flex-1 btn-secondary">
+                        キャンセル
+                    </button>
+                    <button id="confirm-vote-btn" class="flex-1 btn-primary">
+                        投票する
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- スクリプト -->
+    <script src="assets/mock-data.js"></script>
+    <script src="assets/common.js"></script>
+    <script>
+        // 投票詳細ページクラス
+        class VoteDetailPage {
+            constructor() {
+                this.pollId = VoteNowUtils.getUrlParameter('id');
+                this.poll = null;
+                this.selectedOptions = [];
+                this.chart = null;
+                this.init();
+            }
+
+            init() {
+                if (!this.pollId) {
+                    this.showError();
+                    return;
+                }
+
+                this.loadPoll();
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                // 共有ボタン
+                document.getElementById('share-btn').addEventListener('click', () => this.sharePoll());
+                
+                // 結果更新
+                document.getElementById('refresh-results-btn').addEventListener('click', () => this.refreshResults());
+                
+                // 投票フォーム
+                document.getElementById('vote-form').addEventListener('submit', (e) => this.handleVoteSubmit(e));
+                
+                // モーダル
+                document.getElementById('cancel-vote-btn').addEventListener('click', () => this.hideVoteModal());
+                document.getElementById('confirm-vote-btn').addEventListener('click', () => this.confirmVote());
+                
+                // テーマ変更監視
+                window.addEventListener('themeChanged', () => this.updateTheme());
+            }
+
+            loadPoll() {
+                // ローディング表示
+                document.getElementById('loading-state').classList.remove('hidden');
+                
+                // API呼び出しのシミュレーション
+                setTimeout(() => {
+                    this.poll = window.VoteNowData.mockPolls.find(p => p.id === this.pollId);
+                    
+                    if (!this.poll) {
+                        this.showError();
+                        return;
+                    }
+                    
+                    this.renderPoll();
+                    document.getElementById('loading-state').classList.add('hidden');
+                    document.getElementById('poll-content').classList.remove('hidden');
+                    
+                    // アニメーション適用
+                    AnimationManager.slideInElements('.stat-card');
+                }, 800);
+            }
+
+            renderPoll() {
+                this.renderHeader();
+                this.renderSidebar();
+                this.renderVotingArea();
+                this.renderResults();
+                
+                // Lucide アイコン再初期化
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+
+            renderHeader() {
+                const category = window.VoteNowData.POLL_CATEGORIES[this.poll.category];
+                const timeRemaining = window.VoteNowData.PollUtils.getTimeRemaining(this.poll);
+                const hasVoted = window.VoteNowData.PollUtils.hasUserVoted(this.poll.id);
+                
+                const statusBadge = {
+                    active: 'status-badge active',
+                    closed: 'status-badge closed',
+                    draft: 'status-badge draft'
+                };
+
+                document.getElementById('poll-header').innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-3 mb-3">
+                                <span class="category-badge ${category.color.light}">
+                                    ${category.emoji} ${category.name}
+                                </span>
+                                <span class="${statusBadge[this.poll.status]}">
+                                    ${this.poll.status === 'active' ? '進行中' : this.poll.status === 'closed' ? '終了' : '下書き'}
+                                </span>
+                                ${hasVoted ? `
+                                    <span class="status-badge" style="background: rgb(220 252 231); color: rgb(21 128 61); border-color: rgb(187 247 208);">
+                                        <i data-lucide="check-circle" class="h-3 w-3 mr-1"></i>
+                                        投票済み
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <h1 class="text-2xl font-bold mb-3 text-stone-800">${this.poll.title}</h1>
+                            ${this.poll.description ? `
+                                <p class="text-stone-600 leading-relaxed">${this.poll.description}</p>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    ${this.poll.status === 'active' && !timeRemaining.expired ? `
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-center gap-2 text-blue-700">
+                                <i data-lucide="clock" class="h-4 w-4"></i>
+                                <span class="font-medium">${VoteNowUtils.formatTimeRemaining(timeRemaining)}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+            }
+
+            renderVotingArea() {
+                const hasVoted = window.VoteNowData.PollUtils.hasUserVoted(this.poll.id);
+                const isActive = this.poll.status === 'active';
+                
+                if (isActive && !hasVoted) {
+                    this.renderVotingForm();
+                } else if (hasVoted) {
+                    this.renderVotedDisplay();
+                }
+            }
+
+            renderVotingForm() {
+                const votingForm = document.getElementById('voting-form');
+                const optionsContainer = document.getElementById('options-container');
+                
+                votingForm.classList.remove('hidden');
+                
+                optionsContainer.innerHTML = this.poll.options.map((option, index) => `
+                    <label class="vote-option" data-option-id="${option.id}">
+                        <div class="vote-option-content">
+                            <input
+                                type="${this.poll.allowMultiple ? 'checkbox' : 'radio'}"
+                                name="vote-option"
+                                value="${option.id}"
+                                class="vote-option-input"
+                                ${this.poll.allowMultiple ? '' : 'required'}
+                            >
+                            <div class="vote-option-indicator">
+                                <div class="option-selected"></div>
+                            </div>
+                            <div class="vote-option-text">
+                                <div class="vote-option-title">${option.text}</div>
+                                ${option.description ? `
+                                    <div class="vote-option-description">${option.description}</div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </label>
+                `).join('');
+                
+                // 投票オプションのイベントリスナー
+                optionsContainer.querySelectorAll('.vote-option').forEach(option => {
+                    option.addEventListener('click', (e) => this.handleOptionSelect(e));
+                });
+            }
+
+            renderVotedDisplay() {
+                const votedDisplay = document.getElementById('voted-display');
+                const userVote = window.VoteNowData.PollUtils.getUserVote(this.poll.id);
+                
+                votedDisplay.classList.remove('hidden');
+                
+                const selectedOptions = this.poll.options.filter(opt => userVote.includes(opt.id));
+                document.getElementById('user-vote-display').innerHTML = `
+                    <strong>あなたの投票:</strong><br>
+                    ${selectedOptions.map(opt => `• ${opt.text}`).join('<br>')}
+                `;
+            }
+
+            renderResults() {
+                this.renderDetailedResults();
+                this.renderChart();
+            }
+
+            renderDetailedResults() {
+                const container = document.getElementById('detailed-results');
+                const sortedOptions = window.VoteNowData.PollUtils.sortOptionsByVotes(this.poll.options);
+                
+                container.innerHTML = sortedOptions.map((option, index) => {
+                    const percentage = VoteNowUtils.calculatePercentage(option.votes, this.poll.totalVotes);
+                    const isWinning = index === 0 && option.votes > 0;
+                    
+                    return `
+                        <div class="p-4 border border-stone-200 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-stone-800">${option.text}</span>
+                                <div class="text-right">
+                                    <span class="font-semibold text-stone-800">${option.votes}票</span>
+                                    <span class="text-sm text-stone-500 ml-1">(${percentage}%)</span>
+                                </div>
+                            </div>
+                            <div class="result-bar">
+                                <div class="result-bar-fill ${isWinning ? 'winning' : index === 1 ? 'second' : index === 2 ? 'third' : 'other'}" 
+                                     style="width: ${percentage}%"></div>
+                            </div>
+                            ${option.description ? `
+                                <p class="text-sm text-stone-600 mt-2">${option.description}</p>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            renderChart() {
+                const ctx = document.getElementById('results-chart').getContext('2d');
+                
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+                
+                const sortedOptions = window.VoteNowData.PollUtils.sortOptionsByVotes(this.poll.options);
+                
+                this.chart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: sortedOptions.map(opt => opt.text),
+                        datasets: [{
+                            data: sortedOptions.map(opt => opt.votes),
+                            backgroundColor: [
+                                '#10b981', // green-500
+                                '#3b82f6', // blue-500  
+                                '#8b5cf6', // violet-500
+                                '#f59e0b', // amber-500
+                                '#ef4444'  // red-500
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        const percentage = VoteNowUtils.calculatePercentage(context.raw, this.poll.totalVotes);
+                                        return `${context.label}: ${context.raw}票 (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderSidebar() {
+                // 統計情報
+                document.getElementById('total-votes-count').textContent = this.poll.totalVotes;
+                document.getElementById('options-count').textContent = this.poll.options.length;
+                document.getElementById('vote-type').textContent = this.poll.allowMultiple ? '複数選択' : '単一選択';
+                
+                // 時間情報
+                const timeRemaining = window.VoteNowData.PollUtils.getTimeRemaining(this.poll);
+                document.getElementById('time-details').innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-stone-600">作成日時</span>
+                        <span class="text-sm font-medium">${VoteNowUtils.formatDate(this.poll.createdAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-stone-600">終了予定</span>
+                        <span class="text-sm font-medium">${VoteNowUtils.formatDate(this.poll.expiresAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-stone-600">残り時間</span>
+                        <span class="text-sm font-medium ${timeRemaining.expired ? 'text-red-600' : 'text-emerald-600'}">
+                            ${VoteNowUtils.formatTimeRemaining(timeRemaining)}
+                        </span>
+                    </div>
+                `;
+            }
+
+            handleOptionSelect(e) {
+                const optionElement = e.currentTarget;
+                const optionId = optionElement.dataset.optionId;
+                const checkbox = optionElement.querySelector('input');
+                const indicator = optionElement.querySelector('.option-selected');
+                
+                if (this.poll.allowMultiple) {
+                    // 複数選択の場合
+                    const index = this.selectedOptions.indexOf(optionId);
+                    if (index > -1) {
+                        this.selectedOptions.splice(index, 1);
+                        optionElement.classList.remove('selected');
+                        indicator.classList.add('hidden');
+                        checkbox.checked = false;
+                    } else {
+                        this.selectedOptions.push(optionId);
+                        optionElement.classList.add('selected');
+                        indicator.classList.remove('hidden');
+                        checkbox.checked = true;
+                    }
+                } else {
+                    // 単一選択の場合
+                    document.querySelectorAll('.vote-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                        opt.querySelector('.option-selected').classList.add('hidden');
+                        opt.querySelector('input').checked = false;
+                    });
+                    
+                    this.selectedOptions = [optionId];
+                    optionElement.classList.add('selected');
+                    indicator.classList.remove('hidden');
+                    checkbox.checked = true;
+                }
+                
+                // 投票ボタンの有効/無効
+                const submitBtn = document.getElementById('vote-submit-btn');
+                submitBtn.disabled = this.selectedOptions.length === 0;
+            }
+
+            handleVoteSubmit(e) {
+                e.preventDefault();
+                if (this.selectedOptions.length === 0) return;
+                
+                this.showVoteModal();
+            }
+
+            showVoteModal() {
+                const modal = document.getElementById('vote-confirmation-modal');
+                const summary = document.getElementById('vote-summary');
+                
+                const selectedOptions = this.poll.options.filter(opt => this.selectedOptions.includes(opt.id));
+                summary.innerHTML = `
+                    <strong>選択した項目:</strong><br>
+                    ${selectedOptions.map(opt => `• ${opt.text}`).join('<br>')}
+                `;
+                
+                modal.classList.remove('hidden');
+            }
+
+            hideVoteModal() {
+                document.getElementById('vote-confirmation-modal').classList.add('hidden');
+            }
+
+            confirmVote() {
+                this.hideVoteModal();
+                
+                // ローディング状態
+                const submitBtn = document.getElementById('confirm-vote-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 mr-2 animate-spin"></i>投票中...';
+                
+                // 投票実行
+                VotingOperations.castVote(this.poll.id, this.selectedOptions, (error, result) => {
+                    if (error) {
+                        VoteNowUtils.showNotification('投票に失敗しました', 'error');
+                        VoteNowUtils.handleError(error, 'Vote submission');
+                        return;
+                    }
+                    
+                    VoteNowUtils.showNotification('投票ありがとうございました！', 'success');
+                    
+                    // ページ再描画
+                    this.poll = result.poll;
+                    this.renderPoll();
+                    
+                    // フォーム非表示、結果表示
+                    document.getElementById('voting-form').classList.add('hidden');
+                    this.renderVotedDisplay();
+                });
+            }
+
+            refreshResults() {
+                VoteNowUtils.showNotification('結果を更新しました', 'info');
+                this.renderResults();
+            }
+
+            sharePoll() {
+                const url = window.location.href;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: this.poll.title,
+                        text: this.poll.description || '投票に参加してください！',
+                        url: url
+                    });
+                } else {
+                    navigator.clipboard.writeText(url).then(() => {
+                        VoteNowUtils.showNotification('リンクをコピーしました', 'success');
+                    });
+                }
+            }
+
+            updateTheme() {
+                if (!window.VoteNowTheme) return;
+                
+                const theme = window.VoteNowTheme.getCurrentTheme();
+                const cards = document.querySelectorAll('.stat-card, .vote-option');
+                
+                cards.forEach(card => {
+                    if (theme === 'dark') {
+                        card.classList.add('dark');
+                    } else {
+                        card.classList.remove('dark');
+                    }
+                });
+            }
+
+            showError() {
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('error-state').classList.remove('hidden');
+            }
+        }
+
+        // ページ初期化
+        new VoteDetailPage();
+    </script>
+</body>
+</html>

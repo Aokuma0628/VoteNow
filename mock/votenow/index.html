@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteNow - 簡易投票・アンケートサイト</title>
+    <meta name="description" content="簡単に投票やアンケートを作成・参加できるWebアプリケーション">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='2'><path d='M9 12l2 2 4-4'/><circle cx='12' cy='12' r='9'/></svg>">
+    
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="min-h-screen transition-all duration-300 bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50 text-stone-800" id="body">
+    <!-- ヘッダー -->
+    <header class="backdrop-blur-md border-b transition-all duration-300 bg-white/80 border-stone-200/60 sticky top-0 z-40" id="header">
+        <div class="max-w-6xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- ロゴ・タイトル -->
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-emerald-100 border border-emerald-200" id="logo-container">
+                        <i data-lucide="vote" class="h-5 w-5 text-emerald-600"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold transition-colors duration-300 text-stone-800">VoteNow</h1>
+                        <p class="text-sm transition-colors duration-300 text-stone-500">簡易投票・アンケートサイト</p>
+                    </div>
+                </div>
+
+
+                <!-- 右側ボタン -->
+                <div class="flex items-center gap-2">
+                    <!-- モバイル投票作成ボタン -->
+                    <a href="create-poll.html" class="md:hidden p-2 rounded-md transition-all duration-300 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">
+                        <i data-lucide="plus" class="h-5 w-5"></i>
+                    </a>
+                    
+                    <!-- テーマ切り替えボタン -->
+                    <button id="theme-toggle" class="p-2 rounded-md transition-all duration-300 text-stone-500 hover:text-stone-700 hover:bg-stone-100" aria-label="テーマ切り替え">
+                        <i data-lucide="moon" class="h-4 w-4" id="theme-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-6xl mx-auto px-6 py-8">
+        <!-- ヒーロー・統計セクション -->
+        <section class="mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- メインタイトル -->
+                <div class="lg:col-span-2">
+                    <div class="stat-card">
+                        <div class="text-center lg:text-left">
+                            <h2 class="text-3xl font-bold mb-3 text-stone-800">
+                                みんなで決めよう
+                            </h2>
+                            <p class="text-lg text-stone-600 mb-4">
+                                簡単に投票を作成して、みんなの意見を集めることができます
+                            </p>
+                            <a href="create-poll.html" class="inline-flex items-center gap-2 btn-primary">
+                                <i data-lucide="plus" class="h-4 w-4"></i>
+                                新しい投票を作成
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 統計情報 -->
+                <div class="stat-card text-center">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 border border-blue-200 mb-3">
+                        <i data-lucide="users" class="h-6 w-6 text-blue-600"></i>
+                    </div>
+                    <div class="text-2xl font-bold mb-1" id="total-polls">5</div>
+                    <p class="text-sm text-stone-500">進行中の投票</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 投票一覧セクション -->
+        <section id="polls-section">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="polls-container">
+                <!-- 投票カードがここに動的に生成されます -->
+            </div>
+
+            <!-- 空状態 -->
+            <div class="text-center py-16 hidden" id="empty-state">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 bg-stone-100 border border-stone-200">
+                    <i data-lucide="inbox" class="h-8 w-8 text-stone-400"></i>
+                </div>
+                <h3 class="text-lg font-medium mb-2 text-stone-600">投票がありません</h3>
+                <p class="text-sm text-stone-400 mb-4">条件に合う投票が見つかりませんでした</p>
+                <a href="create-poll.html" class="inline-flex items-center gap-2 btn-primary">
+                    <i data-lucide="plus" class="h-4 w-4"></i>
+                    新しい投票を作成
+                </a>
+            </div>
+
+            <!-- ローディング状態 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden" id="loading-state">
+                <div class="poll-card animate-pulse">
+                    <div class="h-48 bg-stone-200 rounded-lg"></div>
+                </div>
+                <div class="poll-card animate-pulse">
+                    <div class="h-48 bg-stone-200 rounded-lg"></div>
+                </div>
+                <div class="poll-card animate-pulse">
+                    <div class="h-48 bg-stone-200 rounded-lg"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- フッター情報 -->
+        <section class="mt-12 pt-8 border-t border-stone-200">
+            <div class="text-center">
+                <p class="text-sm text-stone-500">
+                    VoteNow - みんなで決める、簡単投票プラットフォーム
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- スクリプト -->
+    <script src="assets/mock-data.js"></script>
+    <script src="assets/common.js"></script>
+    <script>
+        // ページ固有のJavaScript
+        class PollListPage {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadPolls();
+                this.updateStats();
+            }
+
+            bindEvents() {
+                // テーマ変更の監視
+                window.addEventListener('themeChanged', () => {
+                    this.updatePollCards();
+                });
+            }
+
+            loadPolls() {
+                const container = document.getElementById('polls-container');
+                const emptyState = document.getElementById('empty-state');
+                
+                // 全ての投票を取得（新しい順でソート）
+                const polls = [...window.VoteNowData.mockPolls].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                if (polls.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                
+                // レンダリング
+                container.innerHTML = polls.map(poll => this.renderPollCard(poll)).join('');
+                
+                // アニメーション適用
+                AnimationManager.slideInElements('.poll-card');
+                
+                // Lucide アイコン再初期化
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+
+                // テーマ適用
+                this.updatePollCards();
+            }
+
+            renderPollCard(poll) {
+                const category = window.VoteNowData.POLL_CATEGORIES[poll.category];
+                const timeRemaining = window.VoteNowData.PollUtils.getTimeRemaining(poll);
+                const hasVoted = window.VoteNowData.PollUtils.hasUserVoted(poll.id);
+                
+                const statusColor = {
+                    active: 'status-badge active',
+                    closed: 'status-badge closed',
+                    draft: 'status-badge draft'
+                };
+
+                return `
+                    <div class="poll-card" data-poll-id="${poll.id}">
+                        <div class="p-6">
+                            <!-- ヘッダー -->
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="category-badge ${category.color.light}" data-theme-class="category">
+                                        ${category.emoji} ${category.name}
+                                    </span>
+                                </div>
+                                <span class="${statusColor[poll.status]}" data-theme-class="status">
+                                    ${poll.status === 'active' ? '進行中' : poll.status === 'closed' ? '終了' : '下書き'}
+                                </span>
+                            </div>
+
+                            <!-- タイトル・説明 -->
+                            <h3 class="text-lg font-semibold mb-2 text-stone-800 line-clamp-2">
+                                ${poll.title}
+                            </h3>
+                            ${poll.description ? `
+                                <p class="text-sm text-stone-600 mb-4 line-clamp-2">
+                                    ${poll.description}
+                                </p>
+                            ` : ''}
+
+                            <!-- 統計情報 -->
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-4 text-sm">
+                                    <span class="flex items-center gap-1 text-stone-500">
+                                        <i data-lucide="users" class="h-4 w-4"></i>
+                                        ${poll.totalVotes}票
+                                    </span>
+                                    <span class="flex items-center gap-1 text-stone-500">
+                                        <i data-lucide="list" class="h-4 w-4"></i>
+                                        ${poll.options.length}選択肢
+                                    </span>
+                                </div>
+                                ${hasVoted ? `
+                                    <span class="flex items-center gap-1 text-emerald-600 text-sm font-medium">
+                                        <i data-lucide="check-circle" class="h-4 w-4"></i>
+                                        投票済み
+                                    </span>
+                                ` : ''}
+                            </div>
+
+                            <!-- 時間情報 -->
+                            <div class="text-xs text-stone-400 mb-4">
+                                作成: ${VoteNowUtils.formatDate(poll.createdAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                ${poll.status === 'active' ? `
+                                    • ${VoteNowUtils.formatTimeRemaining(timeRemaining)}
+                                ` : ''}
+                            </div>
+
+                            <!-- アクションボタン -->
+                            <div class="flex gap-2">
+                                ${poll.status === 'active' && !hasVoted ? `
+                                    <a href="vote-detail.html?id=${poll.id}" class="flex-1 btn-primary text-center">
+                                        投票する
+                                    </a>
+                                ` : `
+                                    <a href="vote-detail.html?id=${poll.id}" class="flex-1 btn-secondary text-center">
+                                        結果を見る
+                                    </a>
+                                `}
+                                <button class="btn-secondary" onclick="this.sharePoll('${poll.id}')" title="共有">
+                                    <i data-lucide="share-2" class="h-4 w-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            updatePollCards() {
+                if (!window.VoteNowTheme) return;
+                
+                const theme = window.VoteNowTheme.getCurrentTheme();
+                const cards = document.querySelectorAll('.poll-card');
+                
+                cards.forEach(card => {
+                    if (theme === 'dark') {
+                        card.classList.add('dark');
+                    } else {
+                        card.classList.remove('dark');
+                    }
+                });
+            }
+
+            updateStats() {
+                const stats = window.VoteNowData.PollUtils.getPollStats(window.VoteNowData.mockPolls);
+                document.getElementById('total-polls').textContent = stats.active;
+            }
+
+            sharePoll(pollId) {
+                const poll = window.VoteNowData.mockPolls.find(p => p.id === pollId);
+                if (poll) {
+                    const url = `${window.location.origin}/vote-detail.html?id=${pollId}`;
+                    
+                    if (navigator.share) {
+                        navigator.share({
+                            title: poll.title,
+                            text: poll.description || '投票に参加してください！',
+                            url: url
+                        });
+                    } else {
+                        navigator.clipboard.writeText(url).then(() => {
+                            VoteNowUtils.showNotification('リンクをコピーしました', 'success');
+                        });
+                    }
+                }
+            }
+        }
+
+        // 追加スタイル
+        const style = document.createElement('style');
+        style.textContent = `
+            .line-clamp-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ページ初期化 - ThemeManagerの初期化を待つ
+        document.addEventListener('DOMContentLoaded', () => {
+            // ThemeManagerの初期化を確実に待つ
+            setTimeout(() => {
+                new PollListPage();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,520 @@
+/**
+ * VoteNow投票アプリ - 共通スタイル
+ * Tailwind CSS v4をベースとした追加スタイル
+ */
+
+/* カスタムアニメーション定義 */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* アニメーションクラス */
+.slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.pulse-animation {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.progress-fill {
+  animation: progressFill 0.8s ease-out forwards;
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* カスタムスクロールバー */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgb(245 245 244); /* stone-100 */
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(214 211 209); /* stone-300 */
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(168 162 158); /* stone-400 */
+}
+
+/* ダークテーマ用スクロールバー */
+@media (prefers-color-scheme: dark) {
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgb(30 41 59); /* slate-800 */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(71 85 105); /* slate-600 */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(100 116 139); /* slate-500 */
+  }
+}
+
+/* 投票プログレスバー */
+.vote-progress {
+  position: relative;
+  background: rgb(231 229 228); /* stone-200 */
+  border-radius: 9999px;
+  overflow: hidden;
+  height: 6px;
+}
+
+.vote-progress.dark {
+  background: rgb(51 65 85); /* slate-700 */
+}
+
+.vote-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(to right, rgb(59 130 246), rgb(37 99 235)); /* blue-500 to blue-600 */
+  border-radius: 9999px;
+  transition: width 0.7s ease-out;
+}
+
+.vote-progress-fill.dark {
+  background: linear-gradient(to right, rgb(96 165 250), rgb(59 130 246)); /* blue-400 to blue-500 */
+}
+
+/* 投票カード */
+.poll-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(231, 229, 228, 0.6); /* stone-200/60 */
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border-radius: 8px;
+}
+
+.poll-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.poll-card.dark {
+  background: rgba(30, 41, 59, 0.5); /* slate-800/50 */
+  border-color: rgba(51, 65, 85, 0.5); /* slate-700/50 */
+}
+
+/* 投票オプション */
+.vote-option {
+  position: relative;
+  padding: 1rem;
+  border: 1px solid rgb(231 229 228); /* stone-200 */
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  background: transparent;
+}
+
+.vote-option:hover {
+  border-color: rgb(147 197 253); /* blue-300 */
+  background: rgba(239, 246, 255, 0.5); /* blue-50/50 */
+}
+
+.vote-option.selected {
+  border-color: rgb(59 130 246); /* blue-500 */
+  background: rgb(239 246 255); /* blue-50 */
+}
+
+.vote-option.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.vote-option.disabled:hover {
+  border-color: rgb(231 229 228); /* stone-200 */
+  background: transparent;
+}
+
+/* ダークテーマ用投票オプション */
+.vote-option.dark {
+  border-color: rgb(51 65 85); /* slate-700 */
+}
+
+.vote-option.dark:hover {
+  border-color: rgb(37 99 235); /* blue-600 */
+  background: rgba(30, 58, 138, 0.2); /* blue-900/20 */
+}
+
+.vote-option.dark.selected {
+  border-color: rgb(96 165 250); /* blue-400 */
+  background: rgba(30, 58, 138, 0.3); /* blue-900/30 */
+}
+
+.vote-option.dark.disabled:hover {
+  border-color: rgb(51 65 85); /* slate-700 */
+  background: transparent;
+}
+
+/* 投票選択肢のレイアウト */
+.vote-option-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem; /* 12px */
+}
+
+.vote-option-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vote-option-text {
+  flex: 1;
+}
+
+.vote-option-title {
+  font-weight: 500;
+  color: rgb(41 37 36); /* stone-800 */
+  line-height: 1.5;
+}
+
+.vote-option-description {
+  font-size: 0.875rem; /* 14px */
+  color: rgb(87 83 78); /* stone-600 */
+  margin-top: 0.25rem; /* 4px */
+  line-height: 1.4;
+}
+
+/* ダークテーマ用テキスト */
+.vote-option.dark .vote-option-title {
+  color: rgb(226 232 240); /* slate-200 */
+}
+
+.vote-option.dark .vote-option-description {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+/* カスタムラジオボタンインジケーター */
+.vote-option-indicator {
+  width: 1.25rem; /* w-5 */
+  height: 1.25rem; /* h-5 */
+  border-radius: 9999px; /* rounded-full */
+  border: 2px solid rgb(214 211 209); /* border-2 border-stone-300 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.125rem; /* mt-0.5 */
+  transition: border-color 0.2s ease-in-out;
+}
+
+.vote-option.selected .vote-option-indicator {
+  border-color: rgb(59 130 246); /* blue-500 */
+}
+
+.option-selected {
+  width: 0.625rem; /* w-2.5 */
+  height: 0.625rem; /* h-2.5 */
+  border-radius: 9999px; /* rounded-full */
+  background-color: rgb(59 130 246); /* bg-blue-500 */
+  display: none;
+}
+
+.vote-option.selected .option-selected {
+  display: block;
+}
+
+/* ダークテーマ用カスタムラジオボタン */
+.vote-option.dark .vote-option-indicator {
+  border-color: rgb(148 163 184); /* slate-400 */
+}
+
+.vote-option.dark.selected .vote-option-indicator {
+  border-color: rgb(96 165 250); /* blue-400 */
+}
+
+.vote-option.dark .option-selected {
+  background-color: rgb(96 165 250); /* blue-400 */
+}
+
+/* 投票結果バー */
+.result-bar {
+  position: relative;
+  background: rgb(245 245 244); /* stone-100 */
+  border-radius: 9999px;
+  overflow: hidden;
+  height: 8px;
+  margin: 0.5rem 0;
+}
+
+.result-bar.dark {
+  background: rgb(51 65 85); /* slate-700 */
+}
+
+.result-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.8s ease-out;
+  position: relative;
+}
+
+.result-bar-fill.winning {
+  background: linear-gradient(to right, rgb(34 197 94), rgb(22 163 74)); /* green-500 to green-600 */
+}
+
+.result-bar-fill.second {
+  background: linear-gradient(to right, rgb(59 130 246), rgb(37 99 235)); /* blue-500 to blue-600 */
+}
+
+.result-bar-fill.third {
+  background: linear-gradient(to right, rgb(168 85 247), rgb(147 51 234)); /* purple-500 to purple-600 */
+}
+
+.result-bar-fill.other {
+  background: linear-gradient(to right, rgb(156 163 175), rgb(107 114 128)); /* gray-400 to gray-500 */
+}
+
+/* ダークテーマ用結果バー */
+.result-bar-fill.dark.winning {
+  background: linear-gradient(to right, rgb(74 222 128), rgb(34 197 94)); /* green-400 to green-500 */
+}
+
+.result-bar-fill.dark.second {
+  background: linear-gradient(to right, rgb(96 165 250), rgb(59 130 246)); /* blue-400 to blue-500 */
+}
+
+.result-bar-fill.dark.third {
+  background: linear-gradient(to right, rgb(196 181 253), rgb(168 85 247)); /* purple-400 to purple-500 */
+}
+
+.result-bar-fill.dark.other {
+  background: linear-gradient(to right, rgb(156 163 175), rgb(107 114 128)); /* gray-400 to gray-500 */
+}
+
+/* カテゴリバッジ */
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+/* ステータスバッジ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.status-badge.active {
+  background: rgb(220 252 231); /* green-100 */
+  color: rgb(21 128 61); /* green-700 */
+  border-color: rgb(187 247 208); /* green-200 */
+}
+
+.status-badge.closed {
+  background: rgb(254 226 226); /* red-100 */
+  color: rgb(185 28 28); /* red-700 */
+  border-color: rgb(254 202 202); /* red-200 */
+}
+
+.status-badge.draft {
+  background: rgb(254 243 199); /* yellow-100 */
+  color: rgb(180 83 9); /* yellow-700 */
+  border-color: rgb(253 230 138); /* yellow-200 */
+}
+
+/* ダークテーマ用ステータスバッジ */
+.status-badge.dark.active {
+  background: rgba(6, 78, 59, 0.3); /* green-900/30 */
+  color: rgb(74 222 128); /* green-400 */
+  border-color: rgba(6, 78, 59, 0.3); /* green-800/30 */
+}
+
+.status-badge.dark.closed {
+  background: rgba(127, 29, 29, 0.3); /* red-900/30 */
+  color: rgb(248 113 113); /* red-400 */
+  border-color: rgba(127, 29, 29, 0.3); /* red-800/30 */
+}
+
+.status-badge.dark.draft {
+  background: rgba(133, 77, 14, 0.3); /* yellow-900/30 */
+  color: rgb(250 204 21); /* yellow-400 */
+  border-color: rgba(133, 77, 14, 0.3); /* yellow-800/30 */
+}
+
+/* 統計カード */
+.stat-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(231, 229, 228, 0.6); /* stone-200/60 */
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.stat-card.dark {
+  background: rgba(30, 41, 59, 0.5); /* slate-800/50 */
+  border-color: rgba(51, 65, 85, 0.5); /* slate-700/50 */
+}
+
+/* ボタンスタイル */
+.btn-primary {
+  background: rgb(59 130 246); /* blue-500 */
+  color: white;
+  border: 1px solid rgb(59 130 246);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: rgb(37 99 235); /* blue-600 */
+  border-color: rgb(37 99 235);
+}
+
+.btn-primary:disabled {
+  background: rgb(156 163 175); /* gray-400 */
+  border-color: rgb(156 163 175);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: rgb(115 115 115); /* stone-500 */
+  border: 1px solid rgb(214 211 209); /* stone-300 */
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: rgb(245 245 244); /* stone-100 */
+  color: rgb(87 83 78); /* stone-600 */
+  border-color: rgb(168 162 158); /* stone-400 */
+}
+
+/* ダークテーマ用ボタン */
+.btn-secondary.dark {
+  color: rgb(148 163 184); /* slate-400 */
+  border-color: rgb(71 85 105); /* slate-600 */
+}
+
+.btn-secondary.dark:hover {
+  background: rgb(51 65 85); /* slate-700 */
+  color: rgb(203 213 225); /* slate-300 */
+  border-color: rgb(100 116 139); /* slate-500 */
+}
+
+/* レスポンシブユーティリティ */
+@media (max-width: 640px) {
+  .poll-card {
+    margin: 0.5rem 0;
+  }
+  
+  .vote-option {
+    padding: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+}
+
+/* アクセシビリティ */
+@media (prefers-reduced-motion: reduce) {
+  .slide-in,
+  .fade-in,
+  .progress-fill,
+  .poll-card,
+  .vote-option,
+  .result-bar-fill {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* フォーカス状態 */
+.vote-option:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: 2px solid rgb(59 130 246); /* blue-500 */
+  outline-offset: 2px;
+}
+
+/* 印刷用スタイル */
+@media print {
+  .poll-card {
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+  
+  .vote-option {
+    border: 1px solid #ccc;
+  }
+  
+  .result-bar-fill {
+    background: #666 !important;
+  }
+}
