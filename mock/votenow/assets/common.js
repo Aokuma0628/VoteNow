@@ -38,7 +38,7 @@ class ThemeManager {
 
     // システムテーマ変更の監視
     if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
         if (!this.hasStoredTheme()) {
           this.isDark = e.matches;
           this.applyTheme();
@@ -72,17 +72,21 @@ class ThemeManager {
 
   applyTheme() {
     const body = document.body;
-    
+
     // ボディクラスの更新
     if (this.isDark) {
       body.className = body.className
-        .replace(/bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50/, 
-                'bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900')
+        .replace(
+          /bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50/,
+          'bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900',
+        )
         .replace(/text-stone-800/, 'text-slate-100');
     } else {
       body.className = body.className
-        .replace(/bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900/, 
-                'bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50')
+        .replace(
+          /bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900/,
+          'bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50',
+        )
         .replace(/text-slate-100/, 'text-stone-800');
     }
 
@@ -100,14 +104,18 @@ class ThemeManager {
     }
 
     // カスタムイベントの発火
-    window.dispatchEvent(new CustomEvent('themeChanged', { 
-      detail: { isDark: this.isDark } 
-    }));
+    window.dispatchEvent(
+      new CustomEvent('themeChanged', {
+        detail: { isDark: this.isDark },
+      }),
+    );
   }
 
   updateDynamicElements() {
     // カード要素の更新
-    const cards = document.querySelectorAll('.poll-card, .stat-card, [class*="bg-white"], [class*="bg-slate-8"]');
+    const cards = document.querySelectorAll(
+      '.poll-card, .stat-card, [class*="bg-white"], [class*="bg-slate-8"]',
+    );
     cards.forEach(card => {
       if (this.isDark) {
         card.classList.add('dark');
@@ -172,10 +180,10 @@ class AnimationManager {
 
   static animateProgressBar(element, targetWidth, duration = 800) {
     if (!element) return;
-    
+
     element.style.width = '0%';
     element.style.transition = `width ${duration}ms ease-out`;
-    
+
     // 次のフレームで実行
     requestAnimationFrame(() => {
       element.style.width = `${targetWidth}%`;
@@ -184,7 +192,7 @@ class AnimationManager {
 
   static shakeElement(element) {
     if (!element) return;
-    
+
     element.classList.add('shake');
     setTimeout(() => {
       element.classList.remove('shake');
@@ -193,7 +201,7 @@ class AnimationManager {
 
   static pulseElement(element, duration = 2000) {
     if (!element) return;
-    
+
     element.classList.add('pulse-animation');
     setTimeout(() => {
       element.classList.remove('pulse-animation');
@@ -206,9 +214,9 @@ class VoteNowUtils {
   // 時間フォーマット
   static formatTimeRemaining(timeObj) {
     if (timeObj.expired) return '期限切れ';
-    
+
     const { days, hours, minutes } = timeObj;
-    
+
     if (days > 0) {
       return `残り${days}日${hours > 0 ? hours + '時間' : ''}`;
     } else if (hours > 0) {
@@ -227,9 +235,9 @@ class VoteNowUtils {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     };
-    
+
     return new Date(date).toLocaleDateString('ja-JP', { ...defaultOptions, ...options });
   }
 
@@ -245,7 +253,7 @@ class VoteNowUtils {
     if (minutes < 60) return `${minutes}分前`;
     if (hours < 24) return `${hours}時間前`;
     if (days < 7) return `${days}日前`;
-    
+
     return this.formatDate(date, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
@@ -281,13 +289,13 @@ class VoteNowUtils {
   // スロットル関数
   static throttle(func, limit) {
     let inThrottle;
-    return function() {
+    return function () {
       const args = arguments;
       const context = this;
       if (!inThrottle) {
         func.apply(context, args);
         inThrottle = true;
-        setTimeout(() => inThrottle = false, limit);
+        setTimeout(() => (inThrottle = false), limit);
       }
     };
   }
@@ -322,7 +330,7 @@ class VoteNowUtils {
   // エラーハンドリング
   static handleError(error, context = '') {
     console.error(`VoteNow Error ${context}:`, error);
-    
+
     // ユーザーへの通知（必要に応じてカスタマイズ）
     const message = error.message || 'エラーが発生しました';
     this.showNotification(message, 'error');
@@ -332,25 +340,25 @@ class VoteNowUtils {
   static showNotification(message, type = 'info', duration = 3000) {
     const notification = document.createElement('div');
     notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
-    
+
     // タイプ別スタイル
     const styles = {
       info: 'bg-blue-500 text-white',
-      success: 'bg-green-500 text-white', 
+      success: 'bg-green-500 text-white',
       warning: 'bg-yellow-500 text-black',
-      error: 'bg-red-500 text-white'
+      error: 'bg-red-500 text-white',
     };
-    
+
     notification.className += ` ${styles[type] || styles.info}`;
     notification.textContent = message;
-    
+
     document.body.appendChild(notification);
-    
+
     // アニメーション表示
     requestAnimationFrame(() => {
       notification.classList.remove('translate-x-full');
     });
-    
+
     // 自動削除
     setTimeout(() => {
       notification.classList.add('translate-x-full');
@@ -365,31 +373,31 @@ class VoteNowUtils {
   // フォームバリデーション
   static validateForm(formData, rules) {
     const errors = {};
-    
+
     for (const [field, rule] of Object.entries(rules)) {
       const value = formData[field];
-      
+
       if (rule.required && (!value || value.trim() === '')) {
         errors[field] = rule.message || `${field}は必須です`;
         continue;
       }
-      
+
       if (value && rule.minLength && value.length < rule.minLength) {
         errors[field] = rule.message || `${field}は${rule.minLength}文字以上入力してください`;
       }
-      
+
       if (value && rule.maxLength && value.length > rule.maxLength) {
         errors[field] = rule.message || `${field}は${rule.maxLength}文字以内で入力してください`;
       }
-      
+
       if (value && rule.pattern && !rule.pattern.test(value)) {
         errors[field] = rule.message || `${field}の形式が正しくありません`;
       }
     }
-    
+
     return {
       isValid: Object.keys(errors).length === 0,
-      errors
+      errors,
     };
   }
 }
@@ -421,8 +429,10 @@ class VotingOperations {
         // 投票履歴の更新
         const vote = {
           pollId,
-          [poll.allowMultiple ? 'optionIds' : 'optionId']: poll.allowMultiple ? optionIds : optionIds[0],
-          votedAt: new Date()
+          [poll.allowMultiple ? 'optionIds' : 'optionId']: poll.allowMultiple
+            ? optionIds
+            : optionIds[0],
+          votedAt: new Date(),
         };
         window.VoteNowData.userVoteHistory.votes.push(vote);
 
@@ -446,14 +456,14 @@ class VotingOperations {
           createdBy: {
             id: 'current-user',
             name: 'あなた',
-            avatar: null
+            avatar: null,
           },
           options: pollData.options.map((text, index) => ({
             id: `opt${Date.now()}_${index}`,
             text,
             description: '',
-            votes: 0
-          }))
+            votes: 0,
+          })),
         };
 
         window.VoteNowData.mockPolls.unshift(newPoll);
@@ -485,11 +495,11 @@ class VotingOperations {
 document.addEventListener('DOMContentLoaded', () => {
   // テーママネージャーの初期化
   window.VoteNowTheme = new ThemeManager();
-  
+
   // アニメーションの適用
   AnimationManager.slideInElements('.poll-card, .stat-card');
   AnimationManager.fadeInElements('[data-fade-in]');
-  
+
   // Lucide アイコンの初期化
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
