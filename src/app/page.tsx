@@ -1,34 +1,119 @@
+'use client';
+
+import { Plus, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { VoteCard } from '@/components/vote-card';
+import { StatsCard } from '@/components/stats-card';
+import { EmptyState } from '@/components/empty-state';
+import { mockVotes, VoteUtils } from '@/lib/mock-data';
+
 export default function Home() {
+  // 新しい順でソート
+  const sortedVotes = [...mockVotes].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+  // 統計情報を計算
+  const stats = VoteUtils.getVoteStats(mockVotes);
+
+  // 投票の共有機能
+  const handleShare = async (voteId: string) => {
+    const vote = mockVotes.find(v => v.id === voteId);
+    if (!vote) return;
+
+    const url = `${window.location.origin}/vote/${voteId}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: vote.title,
+          text: vote.description || '投票に参加してください！',
+          url: url,
+        });
+      } catch {
+        // ユーザーがキャンセルした場合など
+        console.log('共有がキャンセルされました');
+      }
+    } else {
+      // Web Share API が利用できない場合はクリップボードにコピー
+      try {
+        await navigator.clipboard.writeText(url);
+        // 実際のアプリでは通知コンポーネントを表示
+        alert('リンクをコピーしました');
+      } catch (error) {
+        console.error('クリップボードへのコピーに失敗しました:', error);
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
-        {/* ヘッダー */}
-        <header className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">Next.js App</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Next.js with TypeScript and shadcn/ui
-          </p>
-        </header>
+    <div className="min-h-screen transition-all duration-300 bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50 dark:from-gray-900 dark:via-stone-900 dark:to-slate-900 text-stone-800 dark:text-stone-200">
+      {/* メインコンテンツ */}
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {/* ヒーロー・統計セクション */}
+        <section className="mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* メインタイトル */}
+            <div className="lg:col-span-2">
+              <Card className="h-full transition-all duration-300 hover:shadow-md">
+                <CardContent className="p-6">
+                  <div className="text-center lg:text-left">
+                    <h2 className="text-3xl font-bold mb-3 text-stone-800 dark:text-stone-200">
+                      みんなで決めよう
+                    </h2>
+                    <p className="text-lg text-stone-600 dark:text-stone-400 mb-4">
+                      簡単に投票を作成して、みんなの意見を集めることができます
+                    </p>
+                    <Button asChild>
+                      <a href="/create">
+                        <Plus className="h-4 w-4 mr-2" />
+                        新しい投票を作成
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* メインコンテンツ */}
-        <div className="text-center">
-          <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Welcome!</h2>
-            <p className="text-gray-600 mb-6">Next.js アプリケーションへようこそ</p>
+            {/* 統計情報 */}
+            <StatsCard
+              icon={Users}
+              value={stats.active}
+              label="進行中の投票"
+              iconColor="text-blue-600"
+              iconBgColor="bg-blue-100 border-blue-200"
+            />
           </div>
-        </div>
+        </section>
 
-        {/* 技術スタック */}
-        <div className="mt-20 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-8">技術スタック</h2>
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-            <span className="bg-white px-3 py-1 rounded-full border">Next.js 15</span>
-            <span className="bg-white px-3 py-1 rounded-full border">TypeScript</span>
-            <span className="bg-white px-3 py-1 rounded-full border">Tailwind CSS</span>
-            <span className="bg-white px-3 py-1 rounded-full border">shadcn/ui</span>
+        {/* 投票一覧セクション */}
+        <section>
+          {sortedVotes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedVotes.map(vote => (
+                <VoteCard
+                  key={vote.id}
+                  vote={vote}
+                  hasVoted={VoteUtils.hasUserVoted(vote.id)}
+                  onShare={handleShare}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState />
+          )}
+        </section>
+
+        {/* フッター情報 */}
+        <section className="mt-12 pt-8 border-t border-stone-200">
+          <div className="text-center">
+            <p className="text-sm text-stone-500 dark:text-stone-400">
+              VoteNow - みんなで決める、簡単投票プラットフォーム
+            </p>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

@@ -1,118 +1,73 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Menu, Plus, Bell, Settings } from 'lucide-react';
+import { Menu, Moon, Plus, Sun, Vote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useTheme } from '@/providers/theme-provider';
+
 interface HeaderProps {
   onMenuToggle?: () => void;
   title?: string;
 }
 
-export function Header({ onMenuToggle, title = 'Todo App' }: HeaderProps) {
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+export function Header({ onMenuToggle, title }: HeaderProps) {
+  const { resolvedTheme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        {/* モバイルメニューボタン */}
-        <Button variant="ghost" size="icon" className="mr-2 md:hidden" onClick={onMenuToggle}>
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">メニューを開く</span>
-        </Button>
+    <header className="backdrop-blur-md border-b transition-all duration-300 bg-white/80 dark:bg-stone-900/80 border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-40">
+      <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* ロゴ・タイトル */}
+          <div className="flex items-center gap-4">
+            {/* メニューボタン（サイドバー用） */}
+            {onMenuToggle && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onMenuToggle}
+                className="text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                aria-label="メニュー切り替え"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
 
-        {/* ロゴ・タイトル */}
-        <div className="mr-4 flex items-center space-x-2">
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">T</span>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-emerald-100 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
+              <Vote className="h-5 w-5 text-emerald-600" />
             </div>
-            <span className="hidden font-bold sm:inline-block">{title}</span>
-          </Link>
-        </div>
-
-        {/* 中央の検索エリア（将来的に実装） */}
-        <div className="flex flex-1 items-center justify-center px-4">
-          {/* 検索機能は将来的に実装 */}
-        </div>
-
-        {/* 右側のアクション */}
-        <div className="flex items-center space-x-2">
-          {/* 新規作成ボタン */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">新規作成</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>新規作成</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Plus className="h-4 w-4 mr-2" />
-                新しいタスク
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Plus className="h-4 w-4 mr-2" />
-                新しいカテゴリ
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 通知ボタン */}
-          <DropdownMenu open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-4 w-4" />
-                {/* 通知バッジ（将来的に実装） */}
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-destructive"></span>
-                <span className="sr-only">通知</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>通知</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="p-4 text-sm text-muted-foreground">新しい通知はありません</div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 設定ボタン */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Settings className="h-4 w-4" />
-                <span className="sr-only">設定</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>設定</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="h-4 w-4 mr-2" />
-                アプリ設定
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="h-4 w-4 mr-2" />
-                テーマ設定
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* ユーザーメニュー - TODO: 認証機能追加時に実装 */}
-          <Button variant="ghost" size="icon">
-            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-xs font-semibold">U</span>
+            <div>
+              <h1 className="text-2xl font-bold transition-colors duration-300 text-stone-800 dark:text-stone-200">
+                {title || 'VoteNow'}
+              </h1>
+              <p className="text-sm transition-colors duration-300 text-stone-500 dark:text-stone-400">
+                簡易投票・アンケートサイト
+              </p>
             </div>
-          </Button>
+          </div>
+
+          {/* 右側ボタン */}
+          <div className="flex items-center gap-2">
+            {/* モバイル投票作成ボタン */}
+            <Button asChild variant="ghost" size="icon" className="md:hidden text-emerald-600">
+              <a href="/create">
+                <Plus className="h-5 w-5" />
+              </a>
+            </Button>
+
+            {/* テーマ切り替えボタン */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+              aria-label="テーマ切り替え"
+            >
+              {resolvedTheme === 'dark' ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </header>
