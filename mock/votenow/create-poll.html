@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投票作成 - VoteNow</title>
+    <meta name="description" content="新しい投票やアンケートを作成">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='2'><path d='M9 12l2 2 4-4'/><circle cx='12' cy='12' r='9'/></svg>">
+    
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="min-h-screen transition-all duration-300 bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50 text-stone-800" id="body">
+    <!-- ヘッダー -->
+    <header class="backdrop-blur-md border-b transition-all duration-300 bg-white/80 border-stone-200/60 sticky top-0 z-40" id="header">
+        <div class="max-w-6xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- ロゴ・戻るボタン -->
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="p-2 rounded-md transition-all duration-300 text-stone-500 hover:text-stone-700 hover:bg-stone-100" aria-label="ホームに戻る">
+                        <i data-lucide="arrow-left" class="h-5 w-5"></i>
+                    </a>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-100 border border-emerald-200">
+                            <i data-lucide="plus-circle" class="h-4 w-4 text-emerald-600"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-semibold text-stone-800">新しい投票を作成</h1>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側ボタン -->
+                <div class="flex items-center gap-2">
+                    <!-- テーマ切り替えボタン -->
+                    <button id="theme-toggle" class="p-2 rounded-md transition-all duration-300 text-stone-500 hover:text-stone-700 hover:bg-stone-100" aria-label="テーマ切り替え">
+                        <i data-lucide="moon" class="h-4 w-4" id="theme-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-4xl mx-auto px-6 py-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- 作成フォーム -->
+            <div>
+                <form id="create-poll-form" class="space-y-6">
+                    <!-- 基本情報セクション -->
+                    <section class="stat-card">
+                        <h2 class="text-lg font-semibold mb-6 text-stone-800 flex items-center gap-2">
+                            <i data-lucide="info" class="h-5 w-5 text-emerald-600"></i>
+                            基本情報
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <!-- タイトル -->
+                            <div>
+                                <label for="poll-title" class="block text-sm font-medium text-stone-700 mb-2">
+                                    投票タイトル <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="poll-title"
+                                    name="title"
+                                    placeholder="例：好きなプログラミング言語"
+                                    maxlength="100"
+                                    class="w-full px-3 py-2 border border-stone-300 rounded-md focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-colors"
+                                    required
+                                >
+                                <div class="flex justify-between mt-1">
+                                    <div id="title-error" class="text-sm text-red-600 hidden"></div>
+                                    <div class="text-xs text-stone-500">
+                                        <span id="title-count">0</span>/100文字
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 説明 -->
+                            <div>
+                                <label for="poll-description" class="block text-sm font-medium text-stone-700 mb-2">
+                                    説明（任意）
+                                </label>
+                                <textarea
+                                    id="poll-description"
+                                    name="description"
+                                    rows="3"
+                                    placeholder="投票の詳細や注意事項があれば..."
+                                    maxlength="500"
+                                    class="w-full px-3 py-2 border border-stone-300 rounded-md focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-colors resize-none"
+                                ></textarea>
+                                <div class="flex justify-between mt-1">
+                                    <div></div>
+                                    <div class="text-xs text-stone-500">
+                                        <span id="description-count">0</span>/500文字
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- カテゴリ -->
+                            <div>
+                                <label for="poll-category" class="block text-sm font-medium text-stone-700 mb-2">
+                                    カテゴリ <span class="text-red-500">*</span>
+                                </label>
+                                <select
+                                    id="poll-category"
+                                    name="category"
+                                    class="w-full px-3 py-2 border border-stone-300 rounded-md focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-colors"
+                                    required
+                                >
+                                    <option value="">カテゴリを選択してください</option>
+                                    <option value="work">💼 仕事</option>
+                                    <option value="lifestyle">🏠 ライフスタイル</option>
+                                    <option value="food">🍽️ 食事</option>
+                                    <option value="event">🎉 イベント</option>
+                                    <option value="other">📝 その他</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 選択肢セクション -->
+                    <section class="stat-card">
+                        <h2 class="text-lg font-semibold mb-6 text-stone-800 flex items-center gap-2">
+                            <i data-lucide="list" class="h-5 w-5 text-emerald-600"></i>
+                            選択肢
+                            <span class="text-sm font-normal text-stone-500">（最低2つ、最大10個）</span>
+                        </h2>
+                        
+                        <div id="options-container" class="space-y-3 mb-4">
+                            <!-- 選択肢がここに動的生成 -->
+                        </div>
+                        
+                        <button
+                            type="button"
+                            id="add-option-btn"
+                            class="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-stone-300 rounded-md text-stone-600 hover:border-stone-400 hover:text-stone-700 transition-colors"
+                        >
+                            <i data-lucide="plus" class="h-4 w-4"></i>
+                            選択肢を追加
+                        </button>
+                        
+                        <div id="options-error" class="text-sm text-red-600 mt-2 hidden"></div>
+                    </section>
+
+                    <!-- 設定セクション -->
+                    <section class="stat-card">
+                        <h2 class="text-lg font-semibold mb-6 text-stone-800 flex items-center gap-2">
+                            <i data-lucide="settings" class="h-5 w-5 text-emerald-600"></i>
+                            投票設定
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <!-- 投票方式 -->
+                            <div>
+                                <label class="block text-sm font-medium text-stone-700 mb-3">投票方式</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-3 p-3 border border-stone-200 rounded-md cursor-pointer hover:bg-stone-50 transition-colors">
+                                        <input
+                                            type="radio"
+                                            name="voting-type"
+                                            value="single"
+                                            checked
+                                            class="text-blue-600 focus:ring-blue-500"
+                                        >
+                                        <div>
+                                            <div class="font-medium text-stone-800">単一選択</div>
+                                            <div class="text-sm text-stone-600">1つの選択肢のみ選択可能</div>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center gap-3 p-3 border border-stone-200 rounded-md cursor-pointer hover:bg-stone-50 transition-colors">
+                                        <input
+                                            type="radio"
+                                            name="voting-type"
+                                            value="multiple"
+                                            class="text-blue-600 focus:ring-blue-500"
+                                        >
+                                        <div>
+                                            <div class="font-medium text-stone-800">複数選択</div>
+                                            <div class="text-sm text-stone-600">複数の選択肢を選択可能</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 期限設定 -->
+                            <div>
+                                <label for="poll-expires" class="block text-sm font-medium text-stone-700 mb-2">
+                                    投票期限
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    id="poll-expires"
+                                    name="expires"
+                                    class="w-full px-3 py-2 border border-stone-300 rounded-md focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-colors"
+                                >
+                                <div class="text-xs text-stone-500 mt-1">
+                                    未設定の場合は1週間後に自動設定されます
+                                </div>
+                            </div>
+
+                            <!-- パスワード設定 -->
+                            <div>
+                                <label for="poll-password" class="block text-sm font-medium text-stone-700 mb-2">
+                                    投票パスワード（任意）
+                                </label>
+                                <input
+                                    type="password"
+                                    id="poll-password"
+                                    name="password"
+                                    placeholder="パスワードを設定すると参加に認証が必要になります"
+                                    maxlength="50"
+                                    class="w-full px-3 py-2 border border-stone-300 rounded-md focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-colors"
+                                >
+                                <div class="text-xs text-stone-500 mt-1">
+                                    空白の場合は誰でも投票に参加できます
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 作成ボタン -->
+                    <div class="flex justify-center">
+                        <button
+                            type="submit"
+                            id="create-poll-btn"
+                            class="px-8 py-3 btn-primary"
+                            disabled
+                        >
+                            <i data-lucide="rocket" class="h-4 w-4 mr-2"></i>
+                            投票を作成
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 作成完了モーダル -->
+    <div id="success-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg max-w-md w-full p-6 stat-card">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 bg-emerald-100 border border-emerald-200">
+                    <i data-lucide="check-circle" class="h-8 w-8 text-emerald-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">投票を作成しました！</h3>
+                <p class="text-sm text-stone-600 mb-6">投票が正常に作成され、公開されました。</p>
+                <div class="flex gap-3">
+                    <button id="goto-poll-btn" class="flex-1 btn-primary">
+                        投票ページを見る
+                    </button>
+                    <button id="create-another-btn" class="flex-1 btn-secondary">
+                        もう一つ作る
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- スクリプト -->
+    <script src="assets/mock-data.js"></script>
+    <script src="assets/common.js"></script>
+    <script>
+        // 投票作成ページクラス
+        class CreatePollPage {
+            constructor() {
+                this.options = [];
+                this.minOptions = 2;
+                this.maxOptions = 10;
+                this.createdPollId = null;
+                this.init();
+            }
+
+            init() {
+                this.addInitialOptions();
+                this.bindEvents();
+                this.setDefaultExpiry();
+            }
+
+            addInitialOptions() {
+                // 初期選択肢を2つ追加
+                this.addOption('');
+                this.addOption('');
+            }
+
+            bindEvents() {
+                // フォーム要素のイベント
+                const form = document.getElementById('create-poll-form');
+                const titleInput = document.getElementById('poll-title');
+                const descriptionInput = document.getElementById('poll-description');
+                
+                form.addEventListener('submit', (e) => this.handleSubmit(e));
+                titleInput.addEventListener('input', () => this.handleTitleInput());
+                descriptionInput.addEventListener('input', () => this.handleDescriptionInput());
+                
+                // 選択肢追加ボタン
+                document.getElementById('add-option-btn').addEventListener('click', () => this.addOption());
+                
+                // モーダル
+                document.getElementById('goto-poll-btn').addEventListener('click', () => this.gotoPoll());
+                document.getElementById('create-another-btn').addEventListener('click', () => this.createAnother());
+                
+                // フォーム変更監視
+                form.addEventListener('input', () => {
+                    this.validateForm();
+                });
+                
+                // テーマ変更監視
+                window.addEventListener('themeChanged', () => this.updateTheme());
+            }
+
+            addOption(value = '') {
+                if (this.options.length >= this.maxOptions) {
+                    VoteNowUtils.showNotification(`選択肢は最大${this.maxOptions}個までです`, 'warning');
+                    return;
+                }
+
+                const optionId = `option-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const option = {
+                    id: optionId,
+                    value: value
+                };
+                
+                this.options.push(option);
+                this.renderOptions();
+                
+                // 新しく追加された入力欄にフォーカス
+                if (!value) {
+                    setTimeout(() => {
+                        const newInput = document.querySelector(`[data-option-id="${optionId}"] input`);
+                        if (newInput) newInput.focus();
+                    }, 100);
+                }
+            }
+
+            removeOption(optionId) {
+                if (this.options.length <= this.minOptions) {
+                    VoteNowUtils.showNotification(`選択肢は最低${this.minOptions}個必要です`, 'warning');
+                    return;
+                }
+
+                this.options = this.options.filter(opt => opt.id !== optionId);
+                this.renderOptions();
+                this.validateForm();
+            }
+
+            renderOptions() {
+                const container = document.getElementById('options-container');
+                
+                container.innerHTML = this.options.map((option, index) => `
+                    <div class="flex gap-2" data-option-id="${option.id}">
+                        <div class="flex-1">
+                            <input
+                                type="text"
+                                placeholder="選択肢 ${index + 1}"
+                                value="${option.value}"
+                                maxlength="100"
+                                class="w-full px-3 py-2 border border-stone-300 rounded-md focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-colors"
+                                required
+                                data-option-input="${option.id}"
+                            >
+                        </div>
+                        <button
+                            type="button"
+                            onclick="createPollPage.removeOption('${option.id}')"
+                            class="p-2 text-stone-400 hover:text-red-600 transition-colors ${this.options.length <= this.minOptions ? 'opacity-50 cursor-not-allowed' : ''}"
+                            ${this.options.length <= this.minOptions ? 'disabled' : ''}
+                            title="選択肢を削除"
+                        >
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                // 入力イベントのバインド
+                container.querySelectorAll('input').forEach(input => {
+                    input.addEventListener('input', (e) => {
+                        const optionId = e.target.dataset.optionInput;
+                        const option = this.options.find(opt => opt.id === optionId);
+                        if (option) {
+                            option.value = e.target.value;
+                            this.validateForm();
+                        }
+                    });
+                });
+
+                // Lucide アイコン再初期化
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+
+                // 追加ボタンの状態更新
+                const addBtn = document.getElementById('add-option-btn');
+                if (this.options.length >= this.maxOptions) {
+                    addBtn.disabled = true;
+                    addBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    addBtn.disabled = false;
+                    addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            handleTitleInput() {
+                const input = document.getElementById('poll-title');
+                const counter = document.getElementById('title-count');
+                const error = document.getElementById('title-error');
+                
+                counter.textContent = input.value.length;
+                
+                if (input.value.length === 0) {
+                    error.textContent = 'タイトルは必須です';
+                    error.classList.remove('hidden');
+                } else if (input.value.length < 3) {
+                    error.textContent = 'タイトルは3文字以上入力してください';
+                    error.classList.remove('hidden');
+                } else {
+                    error.classList.add('hidden');
+                }
+                
+                this.validateForm();
+            }
+
+            handleDescriptionInput() {
+                const input = document.getElementById('poll-description');
+                const counter = document.getElementById('description-count');
+                
+                counter.textContent = input.value.length;
+            }
+
+            validateForm() {
+                const title = document.getElementById('poll-title').value.trim();
+                const category = document.getElementById('poll-category').value;
+                const validOptions = this.options.filter(opt => opt.value.trim().length > 0);
+                
+                const isValid = 
+                    title.length >= 3 &&
+                    category &&
+                    validOptions.length >= this.minOptions;
+                
+                const createBtn = document.getElementById('create-poll-btn');
+                
+                createBtn.disabled = !isValid;
+                
+                // エラーメッセージ
+                const optionsError = document.getElementById('options-error');
+                if (validOptions.length < this.minOptions) {
+                    optionsError.textContent = `有効な選択肢を最低${this.minOptions}個入力してください`;
+                    optionsError.classList.remove('hidden');
+                } else {
+                    optionsError.classList.add('hidden');
+                }
+                
+                return isValid;
+            }
+
+            setDefaultExpiry() {
+                const expiryInput = document.getElementById('poll-expires');
+                const oneWeekLater = new Date();
+                oneWeekLater.setDate(oneWeekLater.getDate() + 7);
+                
+                // datetime-local形式に変換
+                const year = oneWeekLater.getFullYear();
+                const month = String(oneWeekLater.getMonth() + 1).padStart(2, '0');
+                const day = String(oneWeekLater.getDate()).padStart(2, '0');
+                const hours = String(oneWeekLater.getHours()).padStart(2, '0');
+                const minutes = String(oneWeekLater.getMinutes()).padStart(2, '0');
+                
+                expiryInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                
+                if (!this.validateForm()) {
+                    VoteNowUtils.showNotification('入力内容を確認してください', 'warning');
+                    return;
+                }
+                
+                const formData = this.getFormData();
+                this.createPoll(formData);
+            }
+
+            getFormData() {
+                const title = document.getElementById('poll-title').value.trim();
+                const description = document.getElementById('poll-description').value.trim();
+                const category = document.getElementById('poll-category').value;
+                const votingType = document.querySelector('input[name="voting-type"]:checked').value;
+                const expires = document.getElementById('poll-expires').value;
+                const password = document.getElementById('poll-password').value.trim();
+                const validOptions = this.options.filter(opt => opt.value.trim().length > 0).map(opt => opt.value.trim());
+                
+                return {
+                    title,
+                    description: description || undefined,
+                    category,
+                    options: validOptions,
+                    allowMultiple: votingType === 'multiple',
+                    expiresAt: new Date(expires),
+                    password: password || undefined
+                };
+            }
+
+            createPoll(pollData) {
+                const createBtn = document.getElementById('create-poll-btn');
+                
+                // ローディング状態
+                createBtn.disabled = true;
+                createBtn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 mr-2 animate-spin"></i>作成中...';
+                
+                VotingOperations.createPoll(pollData, (error, result) => {
+                    if (error) {
+                        VoteNowUtils.showNotification('投票の作成に失敗しました', 'error');
+                        VoteNowUtils.handleError(error, 'Poll creation');
+                        
+                        // ボタンを元に戻す
+                        createBtn.disabled = false;
+                        createBtn.innerHTML = '<i data-lucide="rocket" class="h-4 w-4 mr-2"></i>投票を作成';
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                        return;
+                    }
+                    
+                    this.createdPollId = result.poll.id;
+                    this.showSuccessModal();
+                });
+            }
+
+            showSuccessModal() {
+                document.getElementById('success-modal').classList.remove('hidden');
+            }
+
+            hideSuccessModal() {
+                document.getElementById('success-modal').classList.add('hidden');
+            }
+
+            gotoPoll() {
+                if (this.createdPollId) {
+                    window.location.href = `vote-detail.html?id=${this.createdPollId}`;
+                }
+            }
+
+            createAnother() {
+                window.location.reload();
+            }
+
+            updateTheme() {
+                if (!window.VoteNowTheme) return;
+                
+                const theme = window.VoteNowTheme.getCurrentTheme();
+                const cards = document.querySelectorAll('.stat-card');
+                
+                cards.forEach(card => {
+                    if (theme === 'dark') {
+                        card.classList.add('dark');
+                    } else {
+                        card.classList.remove('dark');
+                    }
+                });
+            }
+        }
+
+        // グローバルアクセス用
+        let createPollPage;
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            createPollPage = new CreatePollPage();
+        });
+    </script>
+</body>
+</html>
