@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { ThemeProvider } from '@/providers/theme-provider';
+import { Header } from '@/components/layout/header';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -13,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Next.js App',
-  description: 'Next.js application with shadcn/ui',
+  title: 'VoteNow - 簡易投票・アンケートサイト',
+  description: '簡単に投票やアンケートを作成・参加できるWebアプリケーション',
 };
 
 export default function RootLayout({
@@ -24,7 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning={true}>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider defaultTheme="system" storageKey="votenow-theme">
+          <Header />
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

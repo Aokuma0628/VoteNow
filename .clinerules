@@ -100,6 +100,15 @@ src/
 - **定数**: UPPER_SNAKE_CASE (`API_BASE_URL`)
 - **型/インターフェース**: PascalCase (`UserProfile`, `ApiResponse`)
 
+### VoteNowアプリケーション固有の命名規則
+- **投票関連用語**: 「vote」で統一する
+  - 投票: vote（pollではなく）
+  - 投票一覧: vote list
+  - 投票詳細: vote detail
+  - 投票作成: vote creation
+  - 投票参加: vote participation
+  - 投票結果: vote result
+
 ## React/Next.jsベストプラクティス
 
 ### コンポーネント構造
