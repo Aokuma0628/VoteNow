@@ -8,7 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { VoteCard } from '@/components/vote-card';
@@ -122,16 +128,19 @@ export default function CreatePage() {
   }, [formData.options.length]);
 
   // 選択肢削除
-  const removeOption = useCallback((index: number) => {
-    if (formData.options.length <= 2) {
-      toast.warning('選択肢は最低2個必要です');
-      return;
-    }
-    setFormData(prev => ({
-      ...prev,
-      options: prev.options.filter((_, i) => i !== index),
-    }));
-  }, [formData.options.length]);
+  const removeOption = useCallback(
+    (index: number) => {
+      if (formData.options.length <= 2) {
+        toast.warning('選択肢は最低2個必要です');
+        return;
+      }
+      setFormData(prev => ({
+        ...prev,
+        options: prev.options.filter((_, i) => i !== index),
+      }));
+    },
+    [formData.options.length],
+  );
 
   // 選択肢更新
   const updateOption = useCallback((index: number, value: string) => {
@@ -204,7 +213,9 @@ export default function CreatePage() {
     status: VOTE_STATUS.ACTIVE,
     createdAt: new Date(),
     updatedAt: new Date(),
-    expiresAt: formData.expiresAt ? new Date(formData.expiresAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    expiresAt: formData.expiresAt
+      ? new Date(formData.expiresAt)
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     createdBy: {
       id: 'current-user',
       name: '現在のユーザー',
@@ -383,9 +394,7 @@ export default function CreatePage() {
                   選択肢を追加
                 </Button>
 
-                {errors.options && (
-                  <span className="text-sm text-red-600">{errors.options}</span>
-                )}
+                {errors.options && <span className="text-sm text-red-600">{errors.options}</span>}
               </CardContent>
             </Card>
 
@@ -469,7 +478,9 @@ export default function CreatePage() {
                       <Label htmlFor="isPublic" className="font-medium">
                         公開投票
                       </Label>
-                      <div className="text-sm text-stone-600">誰でも投票に参加できるようにします</div>
+                      <div className="text-sm text-stone-600">
+                        誰でも投票に参加できるようにします
+                      </div>
                     </div>
                     <Switch
                       id="isPublic"
