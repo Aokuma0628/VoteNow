@@ -10,6 +10,9 @@
 - **UIアイコン**: Lucide React v0.511.0
 - **ユーティリティ**: class-variance-authority, clsx, tailwind-merge
 
+## UIモック
+- モックデータは`src/mock/`ディレクトリに配置
+
 ## コードスタイル & フォーマット
 
 ### Prettier設定（設定通りに正確に）

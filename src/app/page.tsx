@@ -7,6 +7,8 @@ import { VoteCard } from '@/components/vote-card';
 import { StatsCard } from '@/components/stats-card';
 import { EmptyState } from '@/components/empty-state';
 import { mockVotes, VoteUtils } from '@/lib/mock-data';
+import { AppLayout } from '@/components/layout/app-layout';
+import { toast } from 'sonner';
 
 export default function Home() {
   // 新しい順でソート
@@ -40,7 +42,7 @@ export default function Home() {
       try {
         await navigator.clipboard.writeText(url);
         // 実際のアプリでは通知コンポーネントを表示
-        alert('リンクをコピーしました');
+        toast.success('リンクをコピーしました');
       } catch (error) {
         console.error('クリップボードへのコピーに失敗しました:', error);
       }
@@ -48,9 +50,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen transition-all duration-300 bg-gradient-to-br from-gray-50 via-stone-50 to-slate-50 dark:from-gray-900 dark:via-stone-900 dark:to-slate-900 text-stone-800 dark:text-stone-200">
+    <AppLayout>
       {/* メインコンテンツ */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto">
         {/* ヒーロー・統計セクション */}
         <section className="mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -113,7 +115,7 @@ export default function Home() {
             </p>
           </div>
         </section>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }
