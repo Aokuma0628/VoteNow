@@ -1,15 +1,15 @@
 'use client';
 
-import { Menu, Moon, Plus, Sun, Vote } from 'lucide-react';
+import { Moon, Plus, Sun, Vote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/providers/theme-provider';
 
 interface HeaderProps {
-  onMenuToggle?: () => void;
   title?: string;
+  actions?: React.ReactNode;
 }
 
-export function Header({ onMenuToggle, title }: HeaderProps) {
+export function Header({ title, actions }: HeaderProps) {
   const { resolvedTheme, toggleTheme } = useTheme();
 
   return (
@@ -18,19 +18,6 @@ export function Header({ onMenuToggle, title }: HeaderProps) {
         <div className="flex items-center justify-between">
           {/* ロゴ・タイトル */}
           <div className="flex items-center gap-4">
-            {/* メニューボタン（サイドバー用） */}
-            {onMenuToggle && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onMenuToggle}
-                className="text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                aria-label="メニュー切り替え"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            )}
-
             <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-emerald-100 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
               <Vote className="h-5 w-5 text-emerald-600" />
             </div>
@@ -46,6 +33,9 @@ export function Header({ onMenuToggle, title }: HeaderProps) {
 
           {/* 右側ボタン */}
           <div className="flex items-center gap-2">
+            {/* カスタムアクション */}
+            {actions}
+            
             {/* モバイル投票作成ボタン */}
             <Button asChild variant="ghost" size="icon" className="md:hidden text-emerald-600">
               <a href="/create">
