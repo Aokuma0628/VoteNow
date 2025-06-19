@@ -1,11 +1,12 @@
 'use client';
 
-import { Plus, Users } from 'lucide-react';
+import { Plus, Users, BarChart3, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { VoteCard } from '@/components/vote-card';
 import { StatsCard } from '@/components/stats-card';
 import { EmptyState } from '@/components/empty-state';
+import { VoteChart } from '@/components/vote-chart';
 import { mockVotes, VoteUtils } from '@/lib/mock-data';
 
 export default function Home() {
@@ -84,6 +85,56 @@ export default function Home() {
               iconColor="text-blue-600"
               iconBgColor="bg-blue-100 border-blue-200"
             />
+            <StatsCard
+              icon={BarChart3}
+              value={stats.totalVotes}
+              label="総投票数"
+              iconColor="text-green-600"
+              iconBgColor="bg-green-100 border-green-200"
+            />
+          </div>
+        </section>
+
+        {/* グラフ機能紹介セクション */}
+        <section className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-2 text-stone-800 dark:text-stone-200 flex items-center justify-center gap-2">
+              <TrendingUp className="h-6 w-6" />
+              投票結果をグラフで可視化
+            </h2>
+            <p className="text-stone-600 dark:text-stone-400">
+              リアルタイムで更新される美しいグラフで投票結果を確認できます
+            </p>
+          </div>
+          
+          {/* サンプルグラフ表示 */}
+          {mockVotes.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <VoteChart 
+                vote={mockVotes[0]} 
+                height={250}
+                showPercentage={true}
+              />
+              {mockVotes.length > 1 && (
+                <VoteChart 
+                  vote={mockVotes[1]} 
+                  height={250}
+                  showPercentage={false}
+                />
+              )}
+            </div>
+          )}
+          
+          <div className="text-center mt-4">
+            <p className="text-sm text-stone-500 dark:text-stone-400 mb-3">
+              各投票の詳細ページでインタラクティブなグラフを表示
+            </p>
+            <Button variant="outline" asChild>
+              <a href={`/vote/${mockVotes[0]?.id}`}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                サンプルグラフを見る
+              </a>
+            </Button>
           </div>
         </section>
 
