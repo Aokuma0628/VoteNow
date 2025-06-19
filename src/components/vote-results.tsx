@@ -1,8 +1,6 @@
 'use client';
 
-import { CheckCircle, TrendingUp, Award } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { CheckCircle } from 'lucide-react';
 import { VoteOption } from '@/types/vote';
 import { VoteUtils } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -16,7 +14,7 @@ interface VoteResultsProps {
   options: VoteOption[];
   totalVotes: number;
   userSelectedOptions?: string[];
-  allowMultiple?: boolean;
+  _allowMultiple?: boolean;
 }
 
 interface ResultBarProps {
@@ -29,7 +27,7 @@ interface ResultBarProps {
 
 function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: ResultBarProps) {
   const percentage = VoteUtils.getVotePercentage(option, totalVotes);
-  
+
   // 順位に応じた色を決定
   const getBarColorClass = () => {
     if (isWinner) return 'bg-gradient-to-r from-green-500 to-green-600';
@@ -37,7 +35,7 @@ function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: Resu
     if (rank === 3) return 'bg-gradient-to-r from-purple-500 to-purple-600';
     return 'bg-gradient-to-r from-gray-400 to-gray-500';
   };
-  
+
   return (
     <div className="p-4 border border-stone-200 dark:border-stone-700 rounded-lg">
       <div className="flex justify-between items-center mb-2">
@@ -56,7 +54,7 @@ function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: Resu
         <div
           className={cn(
             'h-2 rounded-full transition-all duration-700 ease-out',
-            getBarColorClass()
+            getBarColorClass(),
           )}
           style={{ width: `${percentage}%` }}
         />
@@ -68,33 +66,40 @@ function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: Resu
   );
 }
 
-export function VoteResults({ options, totalVotes, userSelectedOptions = [], allowMultiple }: VoteResultsProps) {
+export function VoteResults({
+  options,
+  totalVotes,
+  userSelectedOptions = [],
+  _allowMultiple,
+}: VoteResultsProps) {
   // 投票数でソート
   const sortedOptions = [...options].sort((a, b) => b.votes - a.votes);
-  
+
   // 最高票を獲得したオプションを特定
   const maxVotes = Math.max(...options.map(opt => opt.votes));
-  
+
   // チャートデータの準備
   const chartData = {
     labels: sortedOptions.map(opt => opt.text),
-    datasets: [{
-      data: sortedOptions.map(opt => opt.votes),
-      backgroundColor: [
-        '#10b981', // green-500
-        '#3b82f6', // blue-500  
-        '#8b5cf6', // purple-500
-        '#f59e0b', // amber-500
-        '#ef4444', // red-500
-        '#6b7280', // gray-500
-        '#ec4899', // pink-500
-        '#14b8a6', // teal-500
-      ],
-      borderWidth: 2,
-      borderColor: '#ffffff'
-    }]
+    datasets: [
+      {
+        data: sortedOptions.map(opt => opt.votes),
+        backgroundColor: [
+          '#10b981', // green-500
+          '#3b82f6', // blue-500
+          '#8b5cf6', // purple-500
+          '#f59e0b', // amber-500
+          '#ef4444', // red-500
+          '#6b7280', // gray-500
+          '#ec4899', // pink-500
+          '#14b8a6', // teal-500
+        ],
+        borderWidth: 2,
+        borderColor: '#ffffff',
+      },
+    ],
   };
-  
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -105,21 +110,24 @@ export function VoteResults({ options, totalVotes, userSelectedOptions = [], all
           padding: 15,
           usePointStyle: true,
           font: {
-            size: 12
-          }
-        }
+            size: 12,
+          },
+        },
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => {
-            const percentage = VoteUtils.getVotePercentage({ votes: context.raw } as VoteOption, totalVotes);
+          label: (context: { label: string; raw: unknown }) => {
+            const percentage = VoteUtils.getVotePercentage(
+              { votes: context.raw as number } as VoteOption,
+              totalVotes,
+            );
             return `${context.label}: ${context.raw}票 (${percentage}%)`;
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   };
-  
+
   return (
     <div className="space-y-6">
       {/* チャート表示 */}
@@ -128,7 +136,7 @@ export function VoteResults({ options, totalVotes, userSelectedOptions = [], all
           <Doughnut data={chartData} options={chartOptions} />
         </div>
       </div>
-      
+
       {/* 詳細結果リスト */}
       <div className="space-y-4">
         {sortedOptions.map((option, index) => (

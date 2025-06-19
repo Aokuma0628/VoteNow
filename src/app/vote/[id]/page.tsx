@@ -2,26 +2,40 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Users, Clock, CheckCircle, AlertCircle, Share2, RefreshCw, List, Calendar, HelpCircle, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Share2,
+  RefreshCw,
+  HelpCircle,
+  Loader2,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { VoteResults } from '@/components/vote-results';
 import { Vote, VOTE_CATEGORIES, VOTE_STATUS } from '@/types/vote';
-import { mockVotes, VoteUtils, userVoteHistory } from '@/lib/mock-data';
+import { mockVotes, VoteUtils } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
-
 
 export default function VoteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const voteId = Array.isArray(params.id) ? params.id[0] : params.id;
-  
+
   const [vote, setVote] = useState<Vote | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
@@ -33,18 +47,18 @@ export default function VoteDetailPage() {
 
   useEffect(() => {
     if (!voteId) return;
-    
+
     // ローディングシミュレーション
     setTimeout(() => {
       // 投票データを取得
       const foundVote = mockVotes.find(v => v.id === voteId);
       if (foundVote) {
         setVote(foundVote);
-        
+
         // ユーザーが既に投票しているかチェック
         const hasUserVoted = VoteUtils.hasUserVoted(voteId);
         setHasVoted(hasUserVoted);
-        
+
         if (hasUserVoted) {
           const userOptions = VoteUtils.getUserVote(voteId);
           setUserVoteOptions(userOptions);
@@ -59,12 +73,12 @@ export default function VoteDetailPage() {
 
   const handleShare = () => {
     const url = window.location.href;
-    
+
     if (navigator.share) {
       navigator.share({
         title: vote?.title || 'VoteNow投票',
         text: vote?.description || '投票に参加してください！',
-        url: url
+        url: url,
       });
     } else {
       navigator.clipboard.writeText(url).then(() => {
@@ -75,19 +89,19 @@ export default function VoteDetailPage() {
 
   const handleVoteSubmit = async () => {
     if (selectedOptions.length === 0) return;
-    
+
     setShowConfirmModal(true);
   };
 
   const confirmVote = async () => {
     setShowConfirmModal(false);
     setIsSubmitting(true);
-    
+
     // モック投票処理（実際の実装では API を呼び出し）
     try {
       // 2秒のシミュレーション
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // 投票数を更新（モック）
       const updatedVote = { ...vote! };
       selectedOptions.forEach(optionId => {
@@ -98,12 +112,11 @@ export default function VoteDetailPage() {
       });
       updatedVote.totalVotes += 1;
       setVote(updatedVote);
-      
+
       // ユーザーの投票履歴を更新（モック）
       setHasVoted(true);
       setUserVoteOptions(selectedOptions);
       setShowResults(true);
-      
     } catch (error) {
       console.error('投票の送信に失敗しました:', error);
       alert('投票の送信に失敗しました。もう一度お試しください。');
@@ -114,13 +127,11 @@ export default function VoteDetailPage() {
 
   const handleOptionSelect = (optionId: string) => {
     if (!canVote) return;
-    
+
     if (vote?.allowMultiple) {
       // 複数選択の場合
-      setSelectedOptions(prev => 
-        prev.includes(optionId) 
-          ? prev.filter(id => id !== optionId)
-          : [...prev, optionId]
+      setSelectedOptions(prev =>
+        prev.includes(optionId) ? prev.filter(id => id !== optionId) : [...prev, optionId],
       );
     } else {
       // 単一選択の場合
@@ -136,7 +147,7 @@ export default function VoteDetailPage() {
   // ローディング中
   if (isLoading) {
     return (
-      <AppLayout showSidebar={false}>
+      <AppLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="animate-pulse">
             <Card className="mb-8">
@@ -162,7 +173,7 @@ export default function VoteDetailPage() {
   // エラー状態
   if (!vote) {
     return (
-      <AppLayout showSidebar={false}>
+      <AppLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <Card>
             <CardContent className="p-8 text-center">
@@ -171,9 +182,7 @@ export default function VoteDetailPage() {
               <p className="text-stone-600 dark:text-stone-400 mb-4">
                 指定された投票は存在しないか、削除された可能性があります
               </p>
-              <Button onClick={() => router.push('/')}>
-                ホームに戻る
-              </Button>
+              <Button onClick={() => router.push('/')}>ホームに戻る</Button>
             </CardContent>
           </Card>
         </div>
@@ -187,15 +196,9 @@ export default function VoteDetailPage() {
 
   return (
     <AppLayout
-      showSidebar={false}
       headerActions={
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleShare}
-            title="共有"
-          >
+          <Button variant="ghost" size="icon" onClick={handleShare} title="共有">
             <Share2 className="h-4 w-4" />
           </Button>
         </div>
@@ -218,22 +221,19 @@ export default function VoteDetailPage() {
                 <div className="flex flex-wrap items-center gap-3 mb-3">
                   <Badge
                     variant="secondary"
-                    className={cn(
-                      'gap-1',
-                      category.color.light,
-                      'dark:' + category.color.dark
-                    )}
+                    className={cn('gap-1', category.color.light, 'dark:' + category.color.dark)}
                   >
                     <span>{category.emoji}</span>
                     {category.name}
                   </Badge>
-                  <Badge 
-                    variant={vote.status === VOTE_STATUS.ACTIVE ? 'default' : 'destructive'}
-                  >
+                  <Badge variant={vote.status === VOTE_STATUS.ACTIVE ? 'default' : 'destructive'}>
                     {vote.status === VOTE_STATUS.ACTIVE ? '進行中' : '終了'}
                   </Badge>
                   {hasVoted && (
-                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                    <Badge
+                      variant="secondary"
+                      className="bg-emerald-100 text-emerald-700 border-emerald-200"
+                    >
                       <CheckCircle className="h-3 w-3 mr-1" />
                       投票済み
                     </Badge>
@@ -241,16 +241,20 @@ export default function VoteDetailPage() {
                 </div>
                 <h1 className="text-2xl font-bold mb-3">{vote.title}</h1>
                 {vote.description && (
-                  <p className="text-stone-600 dark:text-stone-400 leading-relaxed">{vote.description}</p>
+                  <p className="text-stone-600 dark:text-stone-400 leading-relaxed">
+                    {vote.description}
+                  </p>
                 )}
               </div>
             </div>
-            
+
             {vote.status === VOTE_STATUS.ACTIVE && !timeRemaining.expired && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
                   <Clock className="h-4 w-4" />
-                  <span className="font-medium">{VoteUtils.formatTimeRemaining(timeRemaining)}</span>
+                  <span className="font-medium">
+                    {VoteUtils.formatTimeRemaining(timeRemaining)}
+                  </span>
                 </div>
               </div>
             )}
@@ -277,7 +281,7 @@ export default function VoteDetailPage() {
                           'hover:bg-stone-50 dark:hover:bg-stone-800',
                           selectedOptions.includes(option.id)
                             ? 'bg-blue-50 border-blue-500 dark:bg-blue-900/20 dark:border-blue-400'
-                            : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700'
+                            : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700',
                         )}
                         onClick={() => handleOptionSelect(option.id)}
                       >
@@ -289,8 +293,8 @@ export default function VoteDetailPage() {
                               className="mt-0.5"
                             />
                           ) : (
-                            <RadioGroupItem 
-                              value={option.id} 
+                            <RadioGroupItem
+                              value={option.id}
                               id={option.id}
                               checked={selectedOptions.includes(option.id)}
                               className="mt-0.5"
@@ -307,9 +311,9 @@ export default function VoteDetailPage() {
                         </div>
                       </label>
                     ))}
-                    
+
                     <div className="flex justify-center pt-4">
-                      <Button 
+                      <Button
                         onClick={handleVoteSubmit}
                         disabled={selectedOptions.length === 0 || isSubmitting}
                         className="px-8"
@@ -331,9 +335,12 @@ export default function VoteDetailPage() {
                     <CheckCircle className="h-8 w-8 text-emerald-600" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">投票ありがとうございました！</h3>
-                  <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">あなたの投票が記録されました</p>
+                  <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">
+                    あなたの投票が記録されました
+                  </p>
                   <div className="text-sm text-stone-500">
-                    <strong>あなたの投票:</strong><br />
+                    <strong>あなたの投票:</strong>
+                    <br />
                     {vote.options
                       .filter(opt => userVoteOptions.includes(opt.id))
                       .map(opt => `• ${opt.text}`)
@@ -348,12 +355,7 @@ export default function VoteDetailPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>投票結果</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={refreshResults}
-                    title="結果を更新"
-                  >
+                  <Button variant="ghost" size="sm" onClick={refreshResults} title="結果を更新">
                     <RefreshCw className="h-4 w-4" />
                   </Button>
                 </div>
@@ -364,12 +366,10 @@ export default function VoteDetailPage() {
                     options={vote.options}
                     totalVotes={vote.totalVotes}
                     userSelectedOptions={userVoteOptions}
-                    allowMultiple={vote.allowMultiple}
+                    _allowMultiple={vote.allowMultiple}
                   />
                 ) : (
-                  <div className="text-center py-8 text-stone-500">
-                    投票後に結果が表示されます
-                  </div>
+                  <div className="text-center py-8 text-stone-500">投票後に結果が表示されます</div>
                 )}
               </CardContent>
             </Card>
@@ -394,7 +394,9 @@ export default function VoteDetailPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">投票方式</span>
-                    <span className="text-sm font-medium">{vote.allowMultiple ? '複数選択' : '単一選択'}</span>
+                    <span className="text-sm font-medium">
+                      {vote.allowMultiple ? '複数選択' : '単一選択'}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -410,21 +412,35 @@ export default function VoteDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">作成日時</span>
                     <span className="text-sm font-medium">
-                      {VoteUtils.formatDate(vote.createdAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {VoteUtils.formatDate(vote.createdAt, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">終了予定</span>
                     <span className="text-sm font-medium">
-                      {VoteUtils.formatDate(vote.expiresAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {vote.expiresAt
+                        ? VoteUtils.formatDate(vote.expiresAt, {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : '未設定'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">残り時間</span>
-                    <span className={cn(
-                      "text-sm font-medium",
-                      timeRemaining.expired ? 'text-red-600' : 'text-emerald-600'
-                    )}>
+                    <span
+                      className={cn(
+                        'text-sm font-medium',
+                        timeRemaining.expired ? 'text-red-600' : 'text-emerald-600',
+                      )}
+                    >
                       {VoteUtils.formatTimeRemaining(timeRemaining)}
                     </span>
                   </div>

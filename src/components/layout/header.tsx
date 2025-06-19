@@ -35,7 +35,7 @@ export function Header({ title, actions }: HeaderProps) {
           <div className="flex items-center gap-2">
             {/* カスタムアクション */}
             {actions}
-            
+
             {/* モバイル投票作成ボタン */}
             <Button asChild variant="ghost" size="icon" className="md:hidden text-emerald-600">
               <a href="/create">
