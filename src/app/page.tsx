@@ -8,6 +8,7 @@ import { StatsCard } from '@/components/stats-card';
 import { EmptyState } from '@/components/empty-state';
 import { mockVotes, VoteUtils } from '@/lib/mock-data';
 import { AppLayout } from '@/components/layout/app-layout';
+import { toast } from 'sonner';
 
 export default function Home() {
   // 新しい順でソート
@@ -41,7 +42,7 @@ export default function Home() {
       try {
         await navigator.clipboard.writeText(url);
         // 実際のアプリでは通知コンポーネントを表示
-        alert('リンクをコピーしました');
+        toast.success('リンクをコピーしました');
       } catch (error) {
         console.error('クリップボードへのコピーに失敗しました:', error);
       }

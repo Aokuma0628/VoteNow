@@ -30,6 +30,7 @@ import { Vote, VOTE_CATEGORIES, VOTE_STATUS } from '@/types/vote';
 import { mockVotes, VoteUtils } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
+import { toast } from 'sonner';
 
 export default function VoteDetailPage() {
   const params = useParams();
@@ -76,13 +77,13 @@ export default function VoteDetailPage() {
 
     if (navigator.share) {
       navigator.share({
-        title: vote?.title || 'VoteNow投票',
+        title: vote?.title || '投票',
         text: vote?.description || '投票に参加してください！',
         url: url,
       });
     } else {
       navigator.clipboard.writeText(url).then(() => {
-        alert('リンクをコピーしました');
+        toast.success('リンクをコピーしました');
       });
     }
   };
@@ -119,7 +120,7 @@ export default function VoteDetailPage() {
       setShowResults(true);
     } catch (error) {
       console.error('投票の送信に失敗しました:', error);
-      alert('投票の送信に失敗しました。もう一度お試しください。');
+      toast.error('投票の送信に失敗しました。もう一度お試しください。');
     } finally {
       setIsSubmitting(false);
     }
@@ -141,7 +142,7 @@ export default function VoteDetailPage() {
 
   const refreshResults = () => {
     // 結果を更新（実際の実装ではAPIを呼び出し）
-    alert('結果を更新しました');
+    toast.info('結果を更新しました');
   };
 
   // ローディング中
