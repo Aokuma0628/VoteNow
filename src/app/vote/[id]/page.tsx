@@ -324,7 +324,7 @@ export default function VoteDetailPage() {
                       // 単一選択の場合：RadioGroupを使用
                       <RadioGroup
                         value={selectedOptions[0] || ''}
-                        onValueChange={(value) => setSelectedOptions([value])}
+                        onValueChange={value => setSelectedOptions([value])}
                       >
                         {vote.options.map(option => (
                           <div
@@ -337,12 +337,11 @@ export default function VoteDetailPage() {
                                 : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700',
                             )}
                           >
-                            <label htmlFor={option.id} className="flex items-start gap-3 cursor-pointer">
-                              <RadioGroupItem
-                                value={option.id}
-                                id={option.id}
-                                className="mt-0.5"
-                              />
+                            <label
+                              htmlFor={option.id}
+                              className="flex items-start gap-3 cursor-pointer"
+                            >
+                              <RadioGroupItem value={option.id} id={option.id} className="mt-0.5" />
                               <div className="flex-1">
                                 <div className="font-medium">{option.text}</div>
                                 {option.description && (
