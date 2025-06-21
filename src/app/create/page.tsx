@@ -19,9 +19,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { AppLayout } from '@/components/layout/app-layout';
 import { VOTE_CATEGORIES, type VoteCategoryId, VOTE_STATUS } from '@/types/vote';
-import { mockVotes } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useVotes } from '@/providers/vote-provider';
 
 interface FormData {
   title: string;
@@ -41,6 +41,7 @@ interface ValidationErrors {
 
 export default function CreatePage() {
   const router = useRouter();
+  const { addVote } = useVotes();
 
   const [formData, setFormData] = useState<FormData>(() => ({
     title: '',
@@ -136,15 +137,12 @@ export default function CreatePage() {
       try {
         const validOptions = formData.options.filter(opt => opt.trim().length > 0);
 
-        // モック投票作成
-        const newVote = {
-          id: `vote-${Date.now()}`,
+        // 投票を作成
+        addVote({
           title: formData.title.trim(),
           description: formData.description.trim() || undefined,
           category: formData.category as VoteCategoryId,
           status: VOTE_STATUS.ACTIVE,
-          createdAt: new Date(),
-          updatedAt: new Date(),
           expiresAt: formData.expiresAt ? new Date(formData.expiresAt) : undefined,
           createdBy: {
             id: 'current-user',
@@ -160,10 +158,7 @@ export default function CreatePage() {
           allowMultiple: formData.allowMultiple,
           allowAddOptions: false,
           isPublic: formData.isPublic,
-        };
-
-        // モックデータに追加（実際の実装では API コール）
-        mockVotes.unshift(newVote);
+        });
 
         toast.success('投票を作成しました！');
 
@@ -174,7 +169,7 @@ export default function CreatePage() {
         toast.error('投票の作成に失敗しました');
       }
     },
-    [formData, validateForm, router],
+    [formData, validateForm, router, addVote],
   );
 
   // バリデーション状態をメモ化
