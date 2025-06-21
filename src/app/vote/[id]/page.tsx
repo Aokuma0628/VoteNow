@@ -27,15 +27,16 @@ import {
 } from '@/components/ui/dialog';
 import { VoteResults } from '@/components/vote-results';
 import { Vote, VOTE_CATEGORIES, VOTE_STATUS } from '@/types/vote';
-import { mockVotes, VoteUtils } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
+import { useVotes } from '@/providers/vote-provider';
 
 export default function VoteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const voteId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const { getVote, castVote, getUserVotes } = useVotes();
 
   const [vote, setVote] = useState<Vote | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -52,16 +53,16 @@ export default function VoteDetailPage() {
     // ローディングシミュレーション
     setTimeout(() => {
       // 投票データを取得
-      const foundVote = mockVotes.find(v => v.id === voteId);
+      const foundVote = getVote(voteId);
       if (foundVote) {
         setVote(foundVote);
 
         // ユーザーが既に投票しているかチェック
-        const hasUserVoted = VoteUtils.hasUserVoted(voteId);
+        const userOptions = getUserVotes(voteId);
+        const hasUserVoted = userOptions.length > 0;
         setHasVoted(hasUserVoted);
 
         if (hasUserVoted) {
-          const userOptions = VoteUtils.getUserVote(voteId);
           setUserVoteOptions(userOptions);
           setShowResults(true);
         } else {
@@ -70,7 +71,7 @@ export default function VoteDetailPage() {
       }
       setIsLoading(false);
     }, 800);
-  }, [voteId]);
+  }, [voteId, getVote, getUserVotes]);
 
   const handleShare = () => {
     const url = window.location.href;
@@ -98,26 +99,25 @@ export default function VoteDetailPage() {
     setShowConfirmModal(false);
     setIsSubmitting(true);
 
-    // モック投票処理（実際の実装では API を呼び出し）
+    // 投票処理
     try {
       // 2秒のシミュレーション
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // 投票数を更新（モック）
-      const updatedVote = { ...vote! };
-      selectedOptions.forEach(optionId => {
-        const option = updatedVote.options.find(opt => opt.id === optionId);
-        if (option) {
-          option.votes += 1;
-        }
-      });
-      updatedVote.totalVotes += 1;
-      setVote(updatedVote);
+      // 投票を実行
+      castVote(voteId, selectedOptions);
 
-      // ユーザーの投票履歴を更新（モック）
+      // 最新の投票データを取得
+      const updatedVote = getVote(voteId);
+      if (updatedVote) {
+        setVote(updatedVote);
+      }
+
+      // ユーザーの投票履歴を更新
       setHasVoted(true);
       setUserVoteOptions(selectedOptions);
       setShowResults(true);
+      toast.success('投票が完了しました！');
     } catch (error) {
       console.error('投票の送信に失敗しました:', error);
       toast.error('投票の送信に失敗しました。もう一度お試しください。');
@@ -141,8 +141,12 @@ export default function VoteDetailPage() {
   };
 
   const refreshResults = () => {
-    // 結果を更新（実際の実装ではAPIを呼び出し）
-    toast.info('結果を更新しました');
+    // 結果を更新
+    const updatedVote = getVote(voteId);
+    if (updatedVote) {
+      setVote(updatedVote);
+      toast.info('結果を更新しました');
+    }
   };
 
   // ローディング中
