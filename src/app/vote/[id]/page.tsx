@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { VoteResults } from '@/components/vote-results';
+import { VoteChart } from '@/components/vote-chart';
 import { Vote, VOTE_CATEGORIES, VOTE_STATUS } from '@/types/vote';
 import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
@@ -366,28 +367,38 @@ export default function VoteDetailPage() {
             )}
 
             {/* 結果表示エリア */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>投票結果</CardTitle>
-                  <Button variant="ghost" size="sm" onClick={refreshResults} title="結果を更新">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {showResults || !canVote ? (
-                  <VoteResults
-                    options={vote.options}
-                    totalVotes={vote.totalVotes}
-                    userSelectedOptions={userVoteOptions}
-                    _allowMultiple={vote.allowMultiple}
-                  />
-                ) : (
-                  <div className="text-center py-8 text-stone-500">投票後に結果が表示されます</div>
-                )}
-              </CardContent>
-            </Card>
+            {showResults || !canVote ? (
+              <div className="space-y-6">
+                {/* グラフ表示 */}
+                <VoteChart vote={vote} />
+
+                {/* 詳細結果 */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>詳細結果</CardTitle>
+                      <Button variant="ghost" size="sm" onClick={refreshResults} title="結果を更新">
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <VoteResults
+                      options={vote.options}
+                      totalVotes={vote.totalVotes}
+                      userSelectedOptions={userVoteOptions}
+                      _allowMultiple={vote.allowMultiple}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8 text-stone-500">
+                  投票後に結果が表示されます
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* サイドバー - 1カラム分 */}

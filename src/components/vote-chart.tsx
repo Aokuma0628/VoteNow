@@ -1,6 +1,15 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Vote } from '@/types/vote';
 import { useMemo } from 'react';
@@ -37,19 +46,20 @@ export function VoteChart({ vote, className }: VoteChartProps) {
   }, [vote.options, vote.totalVotes]);
 
   // カスタムツールチップ
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: { payload: { fullName: string; votes: number; percentage: string; color: string } }[];
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg p-3 shadow-lg">
-          <p className="font-medium text-stone-900 dark:text-stone-100 mb-1">
-            {data.fullName}
-          </p>
+          <p className="font-medium text-stone-900 dark:text-stone-100 mb-1">{data.fullName}</p>
           <div className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-sm" 
-              style={{ backgroundColor: data.color }}
-            />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: data.color }} />
             <span className="text-sm text-stone-600 dark:text-stone-400">
               {data.votes}票 ({data.percentage}%)
             </span>
@@ -64,9 +74,7 @@ export function VoteChart({ vote, className }: VoteChartProps) {
     <Card className={className}>
       <CardHeader>
         <CardTitle className="text-lg">投票結果</CardTitle>
-        <p className="text-sm text-stone-600 dark:text-stone-400">
-          総投票数: {vote.totalVotes}票
-        </p>
+        <p className="text-sm text-stone-600 dark:text-stone-400">総投票数: {vote.totalVotes}票</p>
       </CardHeader>
       <CardContent>
         <div className="h-80 w-full">
@@ -80,9 +88,12 @@ export function VoteChart({ vote, className }: VoteChartProps) {
                 bottom: 5,
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-stone-200 dark:stroke-stone-700" />
-              <XAxis 
-                dataKey="name" 
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="stroke-stone-200 dark:stroke-stone-700"
+              />
+              <XAxis
+                dataKey="name"
                 fontSize={12}
                 className="text-stone-600 dark:text-stone-400"
                 tick={{ fontSize: 12 }}
@@ -91,7 +102,7 @@ export function VoteChart({ vote, className }: VoteChartProps) {
                 textAnchor="end"
                 height={80}
               />
-              <YAxis 
+              <YAxis
                 fontSize={12}
                 className="text-stone-600 dark:text-stone-400"
                 tick={{ fontSize: 12 }}
@@ -105,14 +116,17 @@ export function VoteChart({ vote, className }: VoteChartProps) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        
+
         {/* 詳細統計 */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {chartData.map((item, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-800 rounded-lg">
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-800 rounded-lg"
+            >
               <div className="flex items-center gap-3">
-                <div 
-                  className="w-4 h-4 rounded-sm flex-shrink-0" 
+                <div
+                  className="w-4 h-4 rounded-sm flex-shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
                 <span className="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">
@@ -123,9 +137,7 @@ export function VoteChart({ vote, className }: VoteChartProps) {
                 <div className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                   {item.votes}票
                 </div>
-                <div className="text-xs text-stone-600 dark:text-stone-400">
-                  {item.percentage}%
-                </div>
+                <div className="text-xs text-stone-600 dark:text-stone-400">{item.percentage}%</div>
               </div>
             </div>
           ))}
@@ -134,9 +146,7 @@ export function VoteChart({ vote, className }: VoteChartProps) {
         {/* 投票なしの場合 */}
         {vote.totalVotes === 0 && (
           <div className="text-center py-8">
-            <p className="text-stone-500 dark:text-stone-400">
-              まだ投票がありません
-            </p>
+            <p className="text-stone-500 dark:text-stone-400">まだ投票がありません</p>
           </div>
         )}
       </CardContent>

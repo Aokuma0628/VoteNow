@@ -2,13 +2,9 @@
 
 import { CheckCircle } from 'lucide-react';
 import { VoteOption } from '@/types/vote';
-import { VoteUtils } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
-
-// Chart.jsの登録
-ChartJS.register(ArcElement, Tooltip, Legend);
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useMemo } from 'react';
 
 interface VoteResultsProps {
   options: VoteOption[];
@@ -26,7 +22,7 @@ interface ResultBarProps {
 }
 
 function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: ResultBarProps) {
-  const percentage = VoteUtils.getVotePercentage(option, totalVotes);
+  const percentage = totalVotes > 0 ? ((option.votes / totalVotes) * 100).toFixed(1) : '0.0';
 
   // 順位に応じた色を決定
   const getBarColorClass = () => {
@@ -66,6 +62,20 @@ function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: Resu
   );
 }
 
+// グラフの色パレット
+const COLORS = [
+  '#10B981', // emerald-500
+  '#3B82F6', // blue-500
+  '#8B5CF6', // violet-500
+  '#F59E0B', // amber-500
+  '#EF4444', // red-500
+  '#06B6D4', // cyan-500
+  '#84CC16', // lime-500
+  '#F97316', // orange-500
+  '#EC4899', // pink-500
+  '#6B7280', // gray-500
+];
+
 export function VoteResults({
   options,
   totalVotes,
@@ -78,64 +88,78 @@ export function VoteResults({
   // 最高票を獲得したオプションを特定
   const maxVotes = Math.max(...options.map(opt => opt.votes));
 
-  // チャートデータの準備
-  const chartData = {
-    labels: sortedOptions.map(opt => opt.text),
-    datasets: [
-      {
-        data: sortedOptions.map(opt => opt.votes),
-        backgroundColor: [
-          '#10b981', // green-500
-          '#3b82f6', // blue-500
-          '#8b5cf6', // purple-500
-          '#f59e0b', // amber-500
-          '#ef4444', // red-500
-          '#6b7280', // gray-500
-          '#ec4899', // pink-500
-          '#14b8a6', // teal-500
-        ],
-        borderWidth: 2,
-        borderColor: '#ffffff',
-      },
-    ],
-  };
+  // Recharts用のチャートデータを準備
+  const chartData = useMemo(() => {
+    return sortedOptions.map((option, index) => ({
+      name: option.text,
+      value: option.votes,
+      color: COLORS[index % COLORS.length],
+      percentage: totalVotes > 0 ? ((option.votes / totalVotes) * 100).toFixed(1) : '0.0',
+    }));
+  }, [sortedOptions, totalVotes]);
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          padding: 15,
-          usePointStyle: true,
-          font: {
-            size: 12,
-          },
-        },
-      },
-      tooltip: {
-        callbacks: {
-          label: (context: { label: string; raw: unknown }) => {
-            const percentage = VoteUtils.getVotePercentage(
-              { votes: context.raw as number } as VoteOption,
-              totalVotes,
-            );
-            return `${context.label}: ${context.raw}票 (${percentage}%)`;
-          },
-        },
-      },
-    },
+  // カスタムツールチップ
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: { payload: { name: string; value: number; percentage: string } }[];
+  }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg p-3 shadow-lg">
+          <p className="font-medium text-stone-900 dark:text-stone-100 mb-1">{data.name}</p>
+          <p className="text-sm text-stone-600 dark:text-stone-400">
+            {data.value}票 ({data.percentage}%)
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
     <div className="space-y-6">
       {/* チャート表示 */}
-      <div className="mb-8">
-        <div className="h-64">
-          <Doughnut data={chartData} options={chartOptions} />
+      {totalVotes > 0 && (
+        <div className="mb-8">
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  dataKey="value"
+                  label={({ percentage }) => `${percentage}%`}
+                  labelLine={false}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: '12px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* 投票がない場合のメッセージ */}
+      {totalVotes === 0 && (
+        <div className="text-center py-8">
+          <p className="text-stone-500 dark:text-stone-400">まだ投票がありません</p>
+        </div>
+      )}
 
       {/* 詳細結果リスト */}
       <div className="space-y-4">
