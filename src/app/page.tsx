@@ -6,22 +6,33 @@ import { Card, CardContent } from '@/components/ui/card';
 import { VoteCard } from '@/components/vote-card';
 import { StatsCard } from '@/components/stats-card';
 import { EmptyState } from '@/components/empty-state';
-import { mockVotes, VoteUtils } from '@/lib/mock-data';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
+import { useVotes } from '@/providers/vote-provider';
+import { useMemo } from 'react';
+import { VOTE_STATUS } from '@/types/vote';
 
 export default function Home() {
+  const { votes, getUserVotes } = useVotes();
+
   // 新しい順でソート
-  const sortedVotes = [...mockVotes].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  const sortedVotes = useMemo(
+    () => [...votes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [votes]
   );
 
   // 統計情報を計算
-  const stats = VoteUtils.getVoteStats(mockVotes);
+  const stats = useMemo(() => {
+    const activeVotes = votes.filter(vote => vote.status === VOTE_STATUS.ACTIVE);
+    return {
+      active: activeVotes.length,
+      total: votes.length,
+    };
+  }, [votes]);
 
   // 投票の共有機能
   const handleShare = async (voteId: string) => {
-    const vote = mockVotes.find(v => v.id === voteId);
+    const vote = votes.find(v => v.id === voteId);
     if (!vote) return;
 
     const url = `${window.location.origin}/vote/${voteId}`;
@@ -97,7 +108,7 @@ export default function Home() {
                 <VoteCard
                   key={vote.id}
                   vote={vote}
-                  hasVoted={VoteUtils.hasUserVoted(vote.id)}
+                  hasVoted={getUserVotes(vote.id).length > 0}
                   onShare={handleShare}
                 />
               ))}
