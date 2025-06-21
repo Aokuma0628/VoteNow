@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Minus, Info, List, Settings, Rocket, Eye, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ export default function CreatePage() {
   const router = useRouter();
   const [showPreview, setShowPreview] = useState(false);
 
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<FormData>(() => ({
     title: '',
     description: '',
     category: '',
@@ -54,32 +54,9 @@ export default function CreatePage() {
     allowAddOptions: false,
     isPublic: true,
     expiresAt: '',
-  });
+  }));
 
   const [errors, setErrors] = useState<ValidationErrors>({});
-
-  // デフォルトの期限を設定（1週間後）
-  const getDefaultExpiry = useCallback((): string => {
-    const oneWeekLater = new Date();
-    oneWeekLater.setDate(oneWeekLater.getDate() + 7);
-    oneWeekLater.setHours(23, 59, 0, 0);
-    return oneWeekLater.toISOString().slice(0, 16);
-  }, []);
-
-  // フォーム初期化時に期限を設定
-  const initializeForm = useCallback(() => {
-    if (!formData.expiresAt) {
-      setFormData(prev => ({
-        ...prev,
-        expiresAt: getDefaultExpiry(),
-      }));
-    }
-  }, [formData.expiresAt, getDefaultExpiry]);
-
-  // ページ読み込み時に期限設定
-  useState(() => {
-    initializeForm();
-  });
 
   // バリデーション
   const validateForm = useCallback((): boolean => {
@@ -113,7 +90,7 @@ export default function CreatePage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData]);
+  }, [formData.title, formData.category, formData.options]);
 
   // 選択肢追加
   const addOption = useCallback(() => {
@@ -204,35 +181,50 @@ export default function CreatePage() {
     [formData, validateForm, router],
   );
 
-  // プレビュー用の投票データ
-  const previewVote = {
-    id: 'preview',
-    title: formData.title || '投票タイトル',
-    description: formData.description || undefined,
-    category: (formData.category as VoteCategoryId) || 'other',
-    status: VOTE_STATUS.ACTIVE,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    expiresAt: formData.expiresAt
-      ? new Date(formData.expiresAt)
-      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    createdBy: {
-      id: 'current-user',
-      name: '現在のユーザー',
-      avatar: null,
-    },
-    options: formData.options
-      .filter(opt => opt.trim().length > 0)
-      .map((text, index) => ({
-        id: `preview-opt-${index}`,
-        text: text.trim(),
-        votes: 0,
-      })),
-    totalVotes: 0,
-    allowMultiple: formData.allowMultiple,
-    allowAddOptions: formData.allowAddOptions,
-    isPublic: formData.isPublic,
-  };
+  // プレビュー用の投票データをメモ化
+  const previewVote = useMemo(
+    () => ({
+      id: 'preview',
+      title: formData.title || '投票タイトル',
+      description: formData.description || undefined,
+      category: (formData.category as VoteCategoryId) || 'other',
+      status: VOTE_STATUS.ACTIVE,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      expiresAt: formData.expiresAt
+        ? new Date(formData.expiresAt)
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      createdBy: {
+        id: 'current-user',
+        name: '現在のユーザー',
+        avatar: null,
+      },
+      options: formData.options
+        .filter(opt => opt.trim().length > 0)
+        .map((text, index) => ({
+          id: `preview-opt-${index}`,
+          text: text.trim(),
+          votes: 0,
+        })),
+      totalVotes: 0,
+      allowMultiple: formData.allowMultiple,
+      allowAddOptions: formData.allowAddOptions,
+      isPublic: formData.isPublic,
+    }),
+    [formData],
+  );
+
+  // バリデーション状態をメモ化
+  const isFormValid = useMemo(() => {
+    const hasTitle = formData.title.trim().length >= 3 && formData.title.length <= 100;
+    const hasCategory = !!formData.category;
+    const validOptions = formData.options.filter(opt => opt.trim().length > 0);
+    const hasValidOptions = validOptions.length >= 2;
+    const hasUniqueOptions =
+      new Set(validOptions.map(opt => opt.trim().toLowerCase())).size === validOptions.length;
+
+    return hasTitle && hasCategory && hasValidOptions && hasUniqueOptions;
+  }, [formData.title, formData.category, formData.options]);
 
   if (showPreview) {
     return (
@@ -248,7 +240,7 @@ export default function CreatePage() {
               編集に戻る
             </Button>
             <h1 className="text-2xl font-bold">プレビュー</h1>
-            <Button onClick={handleSubmit} disabled={!validateForm()}>
+            <Button onClick={handleSubmit} disabled={!isFormValid}>
               <Rocket className="h-4 w-4 mr-2" />
               投票を作成
             </Button>
@@ -446,6 +438,7 @@ export default function CreatePage() {
                     type="datetime-local"
                     value={formData.expiresAt}
                     onChange={e => setFormData(prev => ({ ...prev, expiresAt: e.target.value }))}
+                    placeholder="yyyy-MM-dd HH:mm"
                     className="mt-1"
                   />
                   <div className="text-xs text-stone-500 mt-1">
@@ -500,12 +493,12 @@ export default function CreatePage() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowPreview(true)}
-                disabled={!validateForm()}
+                disabled={!isFormValid}
               >
                 <Eye className="h-4 w-4 mr-2" />
                 プレビュー
               </Button>
-              <Button type="submit" disabled={!validateForm()}>
+              <Button type="submit" disabled={!isFormValid}>
                 <Rocket className="h-4 w-4 mr-2" />
                 投票を作成
               </Button>
