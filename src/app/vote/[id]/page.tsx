@@ -15,7 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroupItem } from '@/components/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
@@ -289,44 +289,73 @@ export default function VoteDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {vote.options.map(option => (
-                      <label
-                        key={option.id}
-                        className={cn(
-                          'block p-4 rounded-lg border cursor-pointer transition-all duration-200',
-                          'hover:bg-stone-50 dark:hover:bg-stone-800',
-                          selectedOptions.includes(option.id)
-                            ? 'bg-blue-50 border-blue-500 dark:bg-blue-900/20 dark:border-blue-400'
-                            : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700',
-                        )}
-                        onClick={() => handleOptionSelect(option.id)}
-                      >
-                        <div className="flex items-start gap-3">
-                          {vote.allowMultiple ? (
+                    {vote.allowMultiple ? (
+                      // 複数選択の場合：Checkboxを使用
+                      vote.options.map(option => (
+                        <label
+                          key={option.id}
+                          className={cn(
+                            'block p-4 rounded-lg border cursor-pointer transition-all duration-200',
+                            'hover:bg-stone-50 dark:hover:bg-stone-800',
+                            selectedOptions.includes(option.id)
+                              ? 'bg-blue-50 border-blue-500 dark:bg-blue-900/20 dark:border-blue-400'
+                              : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700',
+                          )}
+                          onClick={() => handleOptionSelect(option.id)}
+                        >
+                          <div className="flex items-start gap-3">
                             <Checkbox
                               checked={selectedOptions.includes(option.id)}
                               onCheckedChange={() => {}}
                               className="mt-0.5"
                             />
-                          ) : (
-                            <RadioGroupItem
-                              value={option.id}
-                              id={option.id}
-                              checked={selectedOptions.includes(option.id)}
-                              className="mt-0.5"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <div className="font-medium">{option.text}</div>
-                            {option.description && (
-                              <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">
-                                {option.description}
-                              </p>
-                            )}
+                            <div className="flex-1">
+                              <div className="font-medium">{option.text}</div>
+                              {option.description && (
+                                <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">
+                                  {option.description}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </label>
-                    ))}
+                        </label>
+                      ))
+                    ) : (
+                      // 単一選択の場合：RadioGroupを使用
+                      <RadioGroup
+                        value={selectedOptions[0] || ''}
+                        onValueChange={(value) => setSelectedOptions([value])}
+                      >
+                        {vote.options.map(option => (
+                          <div
+                            key={option.id}
+                            className={cn(
+                              'block p-4 rounded-lg border cursor-pointer transition-all duration-200',
+                              'hover:bg-stone-50 dark:hover:bg-stone-800',
+                              selectedOptions.includes(option.id)
+                                ? 'bg-blue-50 border-blue-500 dark:bg-blue-900/20 dark:border-blue-400'
+                                : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700',
+                            )}
+                          >
+                            <label htmlFor={option.id} className="flex items-start gap-3 cursor-pointer">
+                              <RadioGroupItem
+                                value={option.id}
+                                id={option.id}
+                                className="mt-0.5"
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium">{option.text}</div>
+                                {option.description && (
+                                  <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">
+                                    {option.description}
+                                  </p>
+                                )}
+                              </div>
+                            </label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    )}
 
                     <div className="flex justify-center pt-4">
                       <Button
