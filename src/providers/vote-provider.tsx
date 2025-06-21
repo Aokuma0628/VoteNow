@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { Vote, VoteCategoryId, VOTE_STATUS } from '@/types/vote';
+import { Vote, VOTE_STATUS } from '@/types/vote';
 
 interface VoteContextType {
   votes: Vote[];
@@ -27,7 +27,7 @@ interface UserVoteRecord {
 // デモ用の初期データ
 const createInitialVotes = (): Vote[] => {
   const now = new Date();
-  
+
   return [
     {
       id: 'vote-demo-1',
@@ -121,30 +121,30 @@ export function VoteProvider({ children }: VoteProviderProps) {
       updatedAt: new Date(),
     };
 
-    setVotes((prev) => [newVote, ...prev]);
+    setVotes(prev => [newVote, ...prev]);
     return newVote;
   }, []);
 
   // 投票を更新
   const updateVote = useCallback((id: string, updates: Partial<Vote>) => {
-    setVotes((prev) =>
-      prev.map((vote) =>
+    setVotes(prev =>
+      prev.map(vote =>
         vote.id === id
           ? {
               ...vote,
               ...updates,
               updatedAt: new Date(),
             }
-          : vote
-      )
+          : vote,
+      ),
     );
   }, []);
 
   // 投票を削除
   const deleteVote = useCallback((id: string) => {
-    setVotes((prev) => prev.filter((vote) => vote.id !== id));
+    setVotes(prev => prev.filter(vote => vote.id !== id));
     // ユーザーの投票履歴も削除
-    setUserVotes((prev) => {
+    setUserVotes(prev => {
       const newRecord = { ...prev };
       delete newRecord[id];
       return newRecord;
@@ -154,65 +154,68 @@ export function VoteProvider({ children }: VoteProviderProps) {
   // 特定の投票を取得
   const getVote = useCallback(
     (id: string): Vote | undefined => {
-      return votes.find((vote) => vote.id === id);
+      return votes.find(vote => vote.id === id);
     },
-    [votes]
+    [votes],
   );
 
   // 投票を実行
-  const castVote = useCallback((voteId: string, optionIds: string[]) => {
-    const vote = votes.find((v) => v.id === voteId);
-    if (!vote) return;
+  const castVote = useCallback(
+    (voteId: string, optionIds: string[]) => {
+      const vote = votes.find(v => v.id === voteId);
+      if (!vote) return;
 
-    // ユーザーの以前の投票を取得
-    const previousVotes = userVotes[voteId] || [];
+      // ユーザーの以前の投票を取得
+      const previousVotes = userVotes[voteId] || [];
 
-    // 投票数を更新
-    setVotes((prev) =>
-      prev.map((v) => {
-        if (v.id !== voteId) return v;
+      // 投票数を更新
+      setVotes(prev =>
+        prev.map(v => {
+          if (v.id !== voteId) return v;
 
-        const updatedOptions = v.options.map((option) => {
-          let newVotes = option.votes;
+          const updatedOptions = v.options.map(option => {
+            let newVotes = option.votes;
 
-          // 以前の投票から削除
-          if (previousVotes.includes(option.id)) {
-            newVotes = Math.max(0, newVotes - 1);
-          }
+            // 以前の投票から削除
+            if (previousVotes.includes(option.id)) {
+              newVotes = Math.max(0, newVotes - 1);
+            }
 
-          // 新しい投票を追加
-          if (optionIds.includes(option.id)) {
-            newVotes += 1;
-          }
+            // 新しい投票を追加
+            if (optionIds.includes(option.id)) {
+              newVotes += 1;
+            }
 
-          return { ...option, votes: newVotes };
-        });
+            return { ...option, votes: newVotes };
+          });
 
-        // 総投票数を再計算
-        const totalVotes = updatedOptions.reduce((sum, opt) => sum + opt.votes, 0);
+          // 総投票数を再計算
+          const totalVotes = updatedOptions.reduce((sum, opt) => sum + opt.votes, 0);
 
-        return {
-          ...v,
-          options: updatedOptions,
-          totalVotes,
-          updatedAt: new Date(),
-        };
-      })
-    );
+          return {
+            ...v,
+            options: updatedOptions,
+            totalVotes,
+            updatedAt: new Date(),
+          };
+        }),
+      );
 
-    // ユーザーの投票履歴を更新
-    setUserVotes((prev) => ({
-      ...prev,
-      [voteId]: optionIds,
-    }));
-  }, [votes, userVotes]);
+      // ユーザーの投票履歴を更新
+      setUserVotes(prev => ({
+        ...prev,
+        [voteId]: optionIds,
+      }));
+    },
+    [votes, userVotes],
+  );
 
   // ユーザーの投票履歴を取得
   const getUserVotes = useCallback(
     (voteId: string): string[] => {
       return userVotes[voteId] || [];
     },
-    [userVotes]
+    [userVotes],
   );
 
   const value = useMemo(
@@ -225,7 +228,7 @@ export function VoteProvider({ children }: VoteProviderProps) {
       castVote,
       getUserVotes,
     }),
-    [votes, addVote, updateVote, deleteVote, getVote, castVote, getUserVotes]
+    [votes, addVote, updateVote, deleteVote, getVote, castVote, getUserVotes],
   );
 
   return <VoteContext.Provider value={value}>{children}</VoteContext.Provider>;

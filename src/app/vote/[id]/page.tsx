@@ -105,12 +105,14 @@ export default function VoteDetailPage() {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // 投票を実行
-      castVote(voteId, selectedOptions);
+      if (voteId) {
+        castVote(voteId, selectedOptions);
 
-      // 最新の投票データを取得
-      const updatedVote = getVote(voteId);
-      if (updatedVote) {
-        setVote(updatedVote);
+        // 最新の投票データを取得
+        const updatedVote = getVote(voteId);
+        if (updatedVote) {
+          setVote(updatedVote);
+        }
       }
 
       // ユーザーの投票履歴を更新
@@ -142,10 +144,12 @@ export default function VoteDetailPage() {
 
   const refreshResults = () => {
     // 結果を更新
-    const updatedVote = getVote(voteId);
-    if (updatedVote) {
-      setVote(updatedVote);
-      toast.info('結果を更新しました');
+    if (voteId) {
+      const updatedVote = getVote(voteId);
+      if (updatedVote) {
+        setVote(updatedVote);
+        toast.info('結果を更新しました');
+      }
     }
   };
 
@@ -196,8 +200,10 @@ export default function VoteDetailPage() {
   }
 
   const category = VOTE_CATEGORIES[vote.category];
-  const timeRemaining = VoteUtils.getTimeRemaining(vote);
-  const canVote = vote.status === VOTE_STATUS.ACTIVE && !hasVoted && !timeRemaining.expired;
+
+  // 期限チェック
+  const isExpired = vote.expiresAt ? new Date() > vote.expiresAt : false;
+  const canVote = vote.status === VOTE_STATUS.ACTIVE && !hasVoted && !isExpired;
 
   return (
     <AppLayout
@@ -253,12 +259,16 @@ export default function VoteDetailPage() {
               </div>
             </div>
 
-            {vote.status === VOTE_STATUS.ACTIVE && !timeRemaining.expired && (
+            {vote.status === VOTE_STATUS.ACTIVE && !isExpired && vote.expiresAt && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
                   <Clock className="h-4 w-4" />
                   <span className="font-medium">
-                    {VoteUtils.formatTimeRemaining(timeRemaining)}
+                    期限: {vote.expiresAt.toLocaleDateString('ja-JP')}{' '}
+                    {vote.expiresAt.toLocaleTimeString('ja-JP', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                 </div>
               </div>
@@ -417,24 +427,14 @@ export default function VoteDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">作成日時</span>
                     <span className="text-sm font-medium">
-                      {VoteUtils.formatDate(vote.createdAt, {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {vote.createdAt.toLocaleDateString('ja-JP')} {vote.createdAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">終了予定</span>
                     <span className="text-sm font-medium">
                       {vote.expiresAt
-                        ? VoteUtils.formatDate(vote.expiresAt, {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
+                        ? `${vote.expiresAt.toLocaleDateString('ja-JP')} ${vote.expiresAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`
                         : '未設定'}
                     </span>
                   </div>
@@ -443,10 +443,10 @@ export default function VoteDetailPage() {
                     <span
                       className={cn(
                         'text-sm font-medium',
-                        timeRemaining.expired ? 'text-red-600' : 'text-emerald-600',
+                        isExpired ? 'text-red-600' : 'text-emerald-600',
                       )}
                     >
-                      {VoteUtils.formatTimeRemaining(timeRemaining)}
+                      {isExpired ? '終了済み' : '投票中'}
                     </span>
                   </div>
                 </div>

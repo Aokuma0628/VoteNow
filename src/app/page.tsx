@@ -17,8 +17,9 @@ export default function Home() {
 
   // 新しい順でソート
   const sortedVotes = useMemo(
-    () => [...votes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [votes]
+    () =>
+      [...votes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [votes],
   );
 
   // 統計情報を計算

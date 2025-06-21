@@ -590,12 +590,16 @@ Closes #7
 #### ブランチ作成とチェックアウト
 
 ```bash
-# 新しいfeatureブランチを作成
+# developブランチから新しいfeatureブランチを作成
+git checkout develop
+git pull origin develop
 git checkout -b feature/#7_vote_detail
 
 # リモートブランチを追跡
 git push -u origin feature/#7_vote_detail
 ```
+
+**重要**: 新しいブランチは必ず `develop` ブランチから作成すること
 
 #### コミット履歴の整理
 
