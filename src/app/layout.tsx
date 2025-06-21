@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/providers/theme-provider';
+import { VoteProvider } from '@/providers/vote-provider';
 import { Toaster } from '@/components/ui/sonner';
 
 const geistSans = Geist({
@@ -28,8 +29,10 @@ export default function RootLayout({
     <html lang="ja" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider defaultTheme="system" storageKey="votenow-theme">
-          {children}
-          <Toaster />
+          <VoteProvider>
+            {children}
+            <Toaster />
+          </VoteProvider>
         </ThemeProvider>
       </body>
     </html>

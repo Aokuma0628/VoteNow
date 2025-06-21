@@ -27,15 +27,16 @@ import {
 } from '@/components/ui/dialog';
 import { VoteResults } from '@/components/vote-results';
 import { Vote, VOTE_CATEGORIES, VOTE_STATUS } from '@/types/vote';
-import { mockVotes, VoteUtils } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
+import { useVotes } from '@/providers/vote-provider';
 
 export default function VoteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const voteId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const { getVote, castVote, getUserVotes } = useVotes();
 
   const [vote, setVote] = useState<Vote | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -52,16 +53,16 @@ export default function VoteDetailPage() {
     // ローディングシミュレーション
     setTimeout(() => {
       // 投票データを取得
-      const foundVote = mockVotes.find(v => v.id === voteId);
+      const foundVote = getVote(voteId);
       if (foundVote) {
         setVote(foundVote);
 
         // ユーザーが既に投票しているかチェック
-        const hasUserVoted = VoteUtils.hasUserVoted(voteId);
+        const userOptions = getUserVotes(voteId);
+        const hasUserVoted = userOptions.length > 0;
         setHasVoted(hasUserVoted);
 
         if (hasUserVoted) {
-          const userOptions = VoteUtils.getUserVote(voteId);
           setUserVoteOptions(userOptions);
           setShowResults(true);
         } else {
@@ -70,7 +71,7 @@ export default function VoteDetailPage() {
       }
       setIsLoading(false);
     }, 800);
-  }, [voteId]);
+  }, [voteId, getVote, getUserVotes]);
 
   const handleShare = () => {
     const url = window.location.href;
@@ -98,26 +99,27 @@ export default function VoteDetailPage() {
     setShowConfirmModal(false);
     setIsSubmitting(true);
 
-    // モック投票処理（実際の実装では API を呼び出し）
+    // 投票処理
     try {
       // 2秒のシミュレーション
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // 投票数を更新（モック）
-      const updatedVote = { ...vote! };
-      selectedOptions.forEach(optionId => {
-        const option = updatedVote.options.find(opt => opt.id === optionId);
-        if (option) {
-          option.votes += 1;
-        }
-      });
-      updatedVote.totalVotes += 1;
-      setVote(updatedVote);
+      // 投票を実行
+      if (voteId) {
+        castVote(voteId, selectedOptions);
 
-      // ユーザーの投票履歴を更新（モック）
+        // 最新の投票データを取得
+        const updatedVote = getVote(voteId);
+        if (updatedVote) {
+          setVote(updatedVote);
+        }
+      }
+
+      // ユーザーの投票履歴を更新
       setHasVoted(true);
       setUserVoteOptions(selectedOptions);
       setShowResults(true);
+      toast.success('投票が完了しました！');
     } catch (error) {
       console.error('投票の送信に失敗しました:', error);
       toast.error('投票の送信に失敗しました。もう一度お試しください。');
@@ -141,8 +143,14 @@ export default function VoteDetailPage() {
   };
 
   const refreshResults = () => {
-    // 結果を更新（実際の実装ではAPIを呼び出し）
-    toast.info('結果を更新しました');
+    // 結果を更新
+    if (voteId) {
+      const updatedVote = getVote(voteId);
+      if (updatedVote) {
+        setVote(updatedVote);
+        toast.info('結果を更新しました');
+      }
+    }
   };
 
   // ローディング中
@@ -192,8 +200,10 @@ export default function VoteDetailPage() {
   }
 
   const category = VOTE_CATEGORIES[vote.category];
-  const timeRemaining = VoteUtils.getTimeRemaining(vote);
-  const canVote = vote.status === VOTE_STATUS.ACTIVE && !hasVoted && !timeRemaining.expired;
+
+  // 期限チェック
+  const isExpired = vote.expiresAt ? new Date() > vote.expiresAt : false;
+  const canVote = vote.status === VOTE_STATUS.ACTIVE && !hasVoted && !isExpired;
 
   return (
     <AppLayout
@@ -249,12 +259,16 @@ export default function VoteDetailPage() {
               </div>
             </div>
 
-            {vote.status === VOTE_STATUS.ACTIVE && !timeRemaining.expired && (
+            {vote.status === VOTE_STATUS.ACTIVE && !isExpired && vote.expiresAt && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
                   <Clock className="h-4 w-4" />
                   <span className="font-medium">
-                    {VoteUtils.formatTimeRemaining(timeRemaining)}
+                    期限: {vote.expiresAt.toLocaleDateString('ja-JP')}{' '}
+                    {vote.expiresAt.toLocaleTimeString('ja-JP', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                 </div>
               </div>
@@ -413,9 +427,8 @@ export default function VoteDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">作成日時</span>
                     <span className="text-sm font-medium">
-                      {VoteUtils.formatDate(vote.createdAt, {
-                        month: 'short',
-                        day: 'numeric',
+                      {vote.createdAt.toLocaleDateString('ja-JP')}{' '}
+                      {vote.createdAt.toLocaleTimeString('ja-JP', {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
@@ -425,12 +438,7 @@ export default function VoteDetailPage() {
                     <span className="text-sm text-stone-600 dark:text-stone-400">終了予定</span>
                     <span className="text-sm font-medium">
                       {vote.expiresAt
-                        ? VoteUtils.formatDate(vote.expiresAt, {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
+                        ? `${vote.expiresAt.toLocaleDateString('ja-JP')} ${vote.expiresAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`
                         : '未設定'}
                     </span>
                   </div>
@@ -439,10 +447,10 @@ export default function VoteDetailPage() {
                     <span
                       className={cn(
                         'text-sm font-medium',
-                        timeRemaining.expired ? 'text-red-600' : 'text-emerald-600',
+                        isExpired ? 'text-red-600' : 'text-emerald-600',
                       )}
                     >
-                      {VoteUtils.formatTimeRemaining(timeRemaining)}
+                      {isExpired ? '終了済み' : '投票中'}
                     </span>
                   </div>
                 </div>
