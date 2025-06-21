@@ -10,12 +10,12 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, title, headerActions }: AppLayoutProps) {
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col min-h-screen">
       {/* ヘッダー */}
       <Header title={title} actions={headerActions} />
 
       {/* メインコンテンツ */}
-      <main className="flex-1 overflow-y-auto bg-muted/30">
+      <main className="flex-1 bg-muted/30">
         <div className="container py-6">{children}</div>
       </main>
     </div>
