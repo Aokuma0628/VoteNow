@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Minus, Info, List, Settings, Rocket, Eye, ArrowLeft } from 'lucide-react';
+import { Plus, Minus, Info, List, Settings, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { VoteCard } from '@/components/vote-card';
 import { AppLayout } from '@/components/layout/app-layout';
 import { VOTE_CATEGORIES, type VoteCategoryId, VOTE_STATUS } from '@/types/vote';
 import { mockVotes } from '@/lib/mock-data';
@@ -30,7 +29,6 @@ interface FormData {
   category: VoteCategoryId | '';
   options: string[];
   allowMultiple: boolean;
-  allowAddOptions: boolean;
   isPublic: boolean;
   expiresAt: string;
 }
@@ -43,7 +41,6 @@ interface ValidationErrors {
 
 export default function CreatePage() {
   const router = useRouter();
-  const [showPreview, setShowPreview] = useState(false);
 
   const [formData, setFormData] = useState<FormData>(() => ({
     title: '',
@@ -51,7 +48,6 @@ export default function CreatePage() {
     category: '',
     options: ['', ''],
     allowMultiple: false,
-    allowAddOptions: false,
     isPublic: true,
     expiresAt: '',
   }));
@@ -162,7 +158,7 @@ export default function CreatePage() {
           })),
           totalVotes: 0,
           allowMultiple: formData.allowMultiple,
-          allowAddOptions: formData.allowAddOptions,
+          allowAddOptions: false,
           isPublic: formData.isPublic,
         };
 
@@ -181,39 +177,6 @@ export default function CreatePage() {
     [formData, validateForm, router],
   );
 
-  // プレビュー用の投票データをメモ化
-  const previewVote = useMemo(
-    () => ({
-      id: 'preview',
-      title: formData.title || '投票タイトル',
-      description: formData.description || undefined,
-      category: (formData.category as VoteCategoryId) || 'other',
-      status: VOTE_STATUS.ACTIVE,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      expiresAt: formData.expiresAt
-        ? new Date(formData.expiresAt)
-        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      createdBy: {
-        id: 'current-user',
-        name: '現在のユーザー',
-        avatar: null,
-      },
-      options: formData.options
-        .filter(opt => opt.trim().length > 0)
-        .map((text, index) => ({
-          id: `preview-opt-${index}`,
-          text: text.trim(),
-          votes: 0,
-        })),
-      totalVotes: 0,
-      allowMultiple: formData.allowMultiple,
-      allowAddOptions: formData.allowAddOptions,
-      isPublic: formData.isPublic,
-    }),
-    [formData],
-  );
-
   // バリデーション状態をメモ化
   const isFormValid = useMemo(() => {
     const hasTitle = formData.title.trim().length >= 3 && formData.title.length <= 100;
@@ -225,34 +188,6 @@ export default function CreatePage() {
 
     return hasTitle && hasCategory && hasValidOptions && hasUniqueOptions;
   }, [formData.title, formData.category, formData.options]);
-
-  if (showPreview) {
-    return (
-      <AppLayout>
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6 flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => setShowPreview(false)}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              編集に戻る
-            </Button>
-            <h1 className="text-2xl font-bold">プレビュー</h1>
-            <Button onClick={handleSubmit} disabled={!isFormValid}>
-              <Rocket className="h-4 w-4 mr-2" />
-              投票を作成
-            </Button>
-          </div>
-
-          <div className="max-w-md mx-auto">
-            <VoteCard vote={previewVote} hasVoted={false} onShare={() => {}} />
-          </div>
-        </div>
-      </AppLayout>
-    );
-  }
 
   return (
     <AppLayout>
@@ -450,24 +385,6 @@ export default function CreatePage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="allowAddOptions" className="font-medium">
-                        選択肢の追加を許可
-                      </Label>
-                      <div className="text-sm text-stone-600">
-                        投票者が新しい選択肢を追加できるようにします
-                      </div>
-                    </div>
-                    <Switch
-                      id="allowAddOptions"
-                      checked={formData.allowAddOptions}
-                      onCheckedChange={checked =>
-                        setFormData(prev => ({ ...prev, allowAddOptions: checked }))
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
                       <Label htmlFor="isPublic" className="font-medium">
                         公開投票
                       </Label>
@@ -488,16 +405,7 @@ export default function CreatePage() {
             </Card>
 
             {/* アクションボタン */}
-            <div className="flex gap-4 justify-center">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowPreview(true)}
-                disabled={!isFormValid}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                プレビュー
-              </Button>
+            <div className="flex justify-center">
               <Button type="submit" disabled={!isFormValid}>
                 <Rocket className="h-4 w-4 mr-2" />
                 投票を作成
