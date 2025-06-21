@@ -427,7 +427,11 @@ export default function VoteDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">作成日時</span>
                     <span className="text-sm font-medium">
-                      {vote.createdAt.toLocaleDateString('ja-JP')} {vote.createdAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                      {vote.createdAt.toLocaleDateString('ja-JP')}{' '}
+                      {vote.createdAt.toLocaleTimeString('ja-JP', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">

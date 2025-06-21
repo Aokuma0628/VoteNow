@@ -33,7 +33,7 @@ const createInitialVotes = (): Vote[] => {
       id: 'vote-demo-1',
       title: '好きなプログラミング言語は？',
       description: 'あなたが最も好きなプログラミング言語を教えてください。',
-      category: 'tech',
+      category: 'other',
       status: VOTE_STATUS.ACTIVE,
       createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3日前
       updatedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
