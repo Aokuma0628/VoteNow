@@ -24,8 +24,92 @@ interface UserVoteRecord {
   [voteId: string]: string[]; // 投票ID -> 選択したオプションIDの配列
 }
 
+// デモ用の初期データ
+const createInitialVotes = (): Vote[] => {
+  const now = new Date();
+  
+  return [
+    {
+      id: 'vote-demo-1',
+      title: '好きなプログラミング言語は？',
+      description: 'あなたが最も好きなプログラミング言語を教えてください。',
+      category: 'tech',
+      status: VOTE_STATUS.ACTIVE,
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3日前
+      updatedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000), // 4日後
+      createdBy: {
+        id: 'user-1',
+        name: 'Tech太郎',
+        avatar: null,
+      },
+      options: [
+        { id: 'opt-1-1', text: 'JavaScript', votes: 42 },
+        { id: 'opt-1-2', text: 'Python', votes: 38 },
+        { id: 'opt-1-3', text: 'TypeScript', votes: 28 },
+        { id: 'opt-1-4', text: 'Java', votes: 15 },
+        { id: 'opt-1-5', text: 'Go', votes: 12 },
+      ],
+      totalVotes: 135,
+      allowMultiple: false,
+      allowAddOptions: false,
+      isPublic: true,
+    },
+    {
+      id: 'vote-demo-2',
+      title: '今日のランチは何にする？',
+      description: 'チームランチの場所を決めましょう！',
+      category: 'food',
+      status: VOTE_STATUS.ACTIVE,
+      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2時間前
+      updatedAt: new Date(now.getTime() - 1 * 60 * 60 * 1000), // 1時間前
+      expiresAt: new Date(now.getTime() + 2 * 60 * 60 * 1000), // 2時間後
+      createdBy: {
+        id: 'user-2',
+        name: '美食家さん',
+        avatar: null,
+      },
+      options: [
+        { id: 'opt-2-1', text: '和食', votes: 8 },
+        { id: 'opt-2-2', text: 'イタリアン', votes: 6 },
+        { id: 'opt-2-3', text: 'ラーメン', votes: 10 },
+        { id: 'opt-2-4', text: 'カレー', votes: 5 },
+      ],
+      totalVotes: 29,
+      allowMultiple: false,
+      allowAddOptions: false,
+      isPublic: true,
+    },
+    {
+      id: 'vote-demo-3',
+      title: 'イベントの開催日程（複数選択可）',
+      description: '参加可能な日程をすべて選んでください。',
+      category: 'event',
+      status: VOTE_STATUS.ACTIVE,
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), // 1日前
+      updatedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000), // 6日後
+      createdBy: {
+        id: 'user-3',
+        name: 'イベント担当',
+        avatar: null,
+      },
+      options: [
+        { id: 'opt-3-1', text: '12月15日（土）', votes: 12 },
+        { id: 'opt-3-2', text: '12月16日（日）', votes: 15 },
+        { id: 'opt-3-3', text: '12月22日（土）', votes: 18 },
+        { id: 'opt-3-4', text: '12月23日（日）', votes: 20 },
+      ],
+      totalVotes: 25, // 参加者数
+      allowMultiple: true,
+      allowAddOptions: false,
+      isPublic: true,
+    },
+  ];
+};
+
 export function VoteProvider({ children }: VoteProviderProps) {
-  const [votes, setVotes] = useState<Vote[]>([]);
+  const [votes, setVotes] = useState<Vote[]>(createInitialVotes());
   const [userVotes, setUserVotes] = useState<UserVoteRecord>({});
 
   // 投票を追加
