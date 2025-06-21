@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ユーザーテーブル
+model User {
+  id       String @id @default(cuid())
+  name     String
+  avatar   String?
+  
+  // リレーション
+  polls    Poll[] @relation("PollCreator")
+  votes    Vote[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("users")
+}
+
+// 投票テーブル
+model Poll {
+  id              String    @id @default(cuid())
+  title           String
+  description     String?
+  category        String    // 'work', 'lifestyle', 'food', 'event', 'other'
+  status          String    @default("draft") // 'draft', 'active', 'closed'
+  allowMultiple   Boolean   @default(false)
+  allowAddOptions Boolean   @default(false)
+  isPublic        Boolean   @default(true)
+  expiresAt       DateTime?
+  
+  // リレーション
+  createdBy       String
+  creator         User         @relation("PollCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  options         PollOption[]
+  votes           Vote[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("polls")
+}
+
+// 投票選択肢テーブル
+model PollOption {
+  id          String @id @default(cuid())
+  text        String
+  description String?
+  
+  // リレーション
+  pollId      String
+  poll        Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes       Vote[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("poll_options")
+}
+
+// 投票履歴テーブル
+model Vote {
+  id       String @id @default(cuid())
+  
+  // リレーション
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  pollId   String
+  poll     Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  
+  optionId String
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  
+  votedAt DateTime @default(now())
+  
+  // 同じユーザーが同じ投票で同じオプションに複数回投票することを防ぐ
+  @@unique([userId, pollId, optionId])
+  @@map("votes")
+}
