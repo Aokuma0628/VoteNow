@@ -266,7 +266,7 @@ export function useRealtime() {
 }
 
 // 特定の投票のリアルタイム監視フック
-export function useRealtimePoll(pollId: string | null) {
+export function useRealtimePoll(pollId: string | null | undefined) {
   const { connectionStatus } = useRealtime();
 
   // 投票の変更を監視するためのSWRキーを生成
