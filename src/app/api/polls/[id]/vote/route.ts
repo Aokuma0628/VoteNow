@@ -10,7 +10,7 @@ import {
   validateArray,
 } from '@/lib/api-utils';
 import type { CastVoteRequest } from '@/types/api';
-import { broadcastUpdate } from '../../events/route';
+import { broadcastUpdate } from '@/lib/realtime';
 
 // POST /api/polls/[id]/vote - 投票実行
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {

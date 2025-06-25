@@ -93,37 +93,48 @@ export function useRealtime() {
     reconnectAttemptsRef.current = 0;
   }, []);
 
-  const handleError = useCallback((event: Event) => {
-    console.error('❌ EventSource接続エラー:', event);
-    const target = event.target as EventSource;
+  const handleError = useCallback(
+    (event: Event) => {
+      console.error('❌ EventSource接続エラー:', event);
+      const target = event.target as EventSource;
 
-    if (target.readyState === EventSource.CLOSED) {
-      setConnectionStatus(prev => ({
-        ...prev,
-        status: 'disconnected',
-        error: 'Connection closed',
-        retryCount: reconnectAttemptsRef.current,
-      }));
-
-      // 自動再接続ロジック
-      if (reconnectAttemptsRef.current < maxRetries) {
-        const delay = baseRetryDelay * Math.pow(2, reconnectAttemptsRef.current);
-        console.log(`🔄 ${delay}ms後に再接続を試行します (${reconnectAttemptsRef.current + 1}/${maxRetries})`);
-
-        retryTimeoutRef.current = setTimeout(() => {
-          reconnectAttemptsRef.current++;
-          connect();
-        }, delay);
-      } else {
-        console.error('❌ 最大再試行回数に達しました。手動で再接続してください。');
+      if (target.readyState === EventSource.CLOSED) {
         setConnectionStatus(prev => ({
           ...prev,
-          status: 'error',
-          error: 'Max retries exceeded',
+          status: 'disconnected',
+          error: 'Connection closed',
+          retryCount: reconnectAttemptsRef.current,
         }));
+
+        // 自動再接続ロジック
+        if (reconnectAttemptsRef.current < maxRetries) {
+          const delay = baseRetryDelay * Math.pow(2, reconnectAttemptsRef.current);
+          console.log(
+            `🔄 ${delay}ms後に再接続を試行します (${reconnectAttemptsRef.current + 1}/${maxRetries})`,
+          );
+
+          retryTimeoutRef.current = setTimeout(() => {
+            reconnectAttemptsRef.current++;
+            setConnectionStatus(prev => ({ ...prev, status: 'connecting' }));
+
+            const eventSource = new EventSource('/api/events');
+            eventSource.addEventListener('message', handleMessage);
+            eventSource.addEventListener('open', handleOpen);
+            eventSource.addEventListener('error', handleError);
+            eventSourceRef.current = eventSource;
+          }, delay);
+        } else {
+          console.error('❌ 最大再試行回数に達しました。手動で再接続してください。');
+          setConnectionStatus(prev => ({
+            ...prev,
+            status: 'error',
+            error: 'Max retries exceeded',
+          }));
+        }
       }
-    }
-  }, []);
+    },
+    [handleMessage, handleOpen],
+  );
 
   // 接続開始
   const connect = useCallback(() => {
@@ -184,17 +195,67 @@ export function useRealtime() {
   const reconnect = useCallback(() => {
     console.log('🔄 手動再接続を開始します');
     reconnectAttemptsRef.current = 0;
-    connect();
-  }, [connect]);
+
+    // 既存の接続があれば閉じる
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    // タイムアウトをクリア
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+
+    try {
+      setConnectionStatus(prev => ({ ...prev, status: 'connecting' }));
+
+      const eventSource = new EventSource('/api/events');
+      eventSource.addEventListener('message', handleMessage);
+      eventSource.addEventListener('open', handleOpen);
+      eventSource.addEventListener('error', handleError);
+
+      eventSourceRef.current = eventSource;
+    } catch (error) {
+      console.error('❌ EventSource接続の初期化に失敗:', error);
+      setConnectionStatus(prev => ({
+        ...prev,
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Connection failed',
+      }));
+    }
+  }, [handleMessage, handleOpen, handleError]);
 
   // コンポーネントのマウント/アンマウント時の処理
   useEffect(() => {
-    connect();
+    // 初回接続を実行
+    const initConnect = () => {
+      try {
+        setConnectionStatus(prev => ({ ...prev, status: 'connecting' }));
+
+        const eventSource = new EventSource('/api/events');
+        eventSource.addEventListener('message', handleMessage);
+        eventSource.addEventListener('open', handleOpen);
+        eventSource.addEventListener('error', handleError);
+
+        eventSourceRef.current = eventSource;
+      } catch (error) {
+        console.error('❌ EventSource接続の初期化に失敗:', error);
+        setConnectionStatus(prev => ({
+          ...prev,
+          status: 'error',
+          error: error instanceof Error ? error.message : 'Connection failed',
+        }));
+      }
+    };
+
+    initConnect();
 
     return () => {
       disconnect();
     };
-  }, [connect, disconnect]);
+  }, [handleMessage, handleOpen, handleError, disconnect]);
 
   return {
     connectionStatus,

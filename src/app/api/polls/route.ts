@@ -11,7 +11,7 @@ import {
   parseRequestBody,
 } from '@/lib/api-utils';
 import type { PollsListResponse, CreatePollRequest } from '@/types/api';
-import { broadcastUpdate } from '../events/route';
+import { broadcastUpdate } from '@/lib/realtime';
 
 // GET /api/polls - 投票一覧取得
 export const GET = withErrorHandling(async (request: NextRequest) => {
