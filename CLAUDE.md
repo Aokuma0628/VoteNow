@@ -681,6 +681,31 @@ git push -u origin feature/#7_vote_detail
 
 **重要**: 新しいブランチは必ず `develop` ブランチから作成すること
 
+#### Issue実装時のブランチ切り替えルール
+
+**重要**: Claudeは新しいIssueの実装を開始する際は、必ず以下の手順でブランチを切り替えること：
+
+1. **developブランチへの切り替えと更新**
+   ```bash
+   git checkout develop
+   git pull origin develop
+   ```
+
+2. **新しいfeatureブランチの作成**
+   ```bash
+   git checkout -b feature/#<issue-number>_<description>
+   ```
+
+3. **リモートブランチの追跡設定**
+   ```bash
+   git push -u origin feature/#<issue-number>_<description>
+   ```
+
+この手順により、以下を確実にする：
+- 最新のdevelopブランチから作業を開始
+- Issue番号に基づいた適切なブランチ名
+- リモートとの適切な追跡関係の設定
+
 #### コミット履歴の整理
 
 ```bash
