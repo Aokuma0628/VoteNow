@@ -1,20 +1,17 @@
 import useSWR from 'swr';
-import type { 
-  PollsListResponse, 
-  PollDetailResponse, 
-  CreatePollRequest, 
+import type {
+  PollsListResponse,
+  PollDetailResponse,
+  CreatePollRequest,
   CreatePollResponse,
   CastVoteRequest,
-  CastVoteResponse 
+  CastVoteResponse,
 } from '@/types/api';
 import { fetcher } from '../swr-config';
 
 // 投票一覧取得フック
 export function usePolls() {
-  const { data, error, isLoading, mutate } = useSWR<PollsListResponse>(
-    '/api/polls',
-    fetcher
-  );
+  const { data, error, isLoading, mutate } = useSWR<PollsListResponse>('/api/polls', fetcher);
 
   return {
     polls: data?.data?.polls || [],
@@ -27,10 +24,10 @@ export function usePolls() {
 }
 
 // 投票詳細取得フック
-export function usePoll(id: string | null) {
+export function usePoll(id: string | null | undefined) {
   const { data, error, isLoading, mutate } = useSWR<PollDetailResponse>(
     id ? `/api/polls/${id}` : null,
-    fetcher
+    fetcher,
   );
 
   return {
@@ -65,8 +62,8 @@ export async function createPoll(pollData: CreatePollRequest): Promise<CreatePol
 
 // 投票実行関数
 export async function castVote(
-  pollId: string, 
-  voteData: CastVoteRequest
+  pollId: string,
+  voteData: CastVoteRequest,
 ): Promise<CastVoteResponse> {
   const response = await fetch(`/api/polls/${pollId}/vote`, {
     method: 'POST',

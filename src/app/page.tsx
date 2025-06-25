@@ -10,7 +10,6 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
 import { usePolls } from '@/lib/hooks/use-polls';
 import { useMemo } from 'react';
-import { VOTE_STATUS } from '@/types/vote';
 
 export default function Home() {
   const { polls, total, isLoading, isError, error } = usePolls();

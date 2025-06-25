@@ -11,11 +11,11 @@ import {
   Cell,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Vote } from '@/types/vote';
+import type { PollWithDetails } from '@/types/api';
 import { useMemo } from 'react';
 
 interface VoteChartProps {
-  vote: Vote;
+  vote: PollWithDetails;
   className?: string;
 }
 

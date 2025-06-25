@@ -10,10 +10,10 @@ export const fetcher = async (url: string) => {
       error: 'Network error',
       message: `HTTP ${response.status}: ${response.statusText}`,
     }));
-    
+
     const error = new Error(errorData.message || 'An error occurred');
-    (error as any).info = errorData;
-    (error as any).status = response.status;
+    (error as Error & { info?: unknown; status?: number }).info = errorData;
+    (error as Error & { info?: unknown; status?: number }).status = response.status;
     throw error;
   }
 
@@ -29,7 +29,7 @@ export const swrConfig: SWRConfiguration = {
   dedupingInterval: 2000, // 2秒間の重複リクエスト防止
   errorRetryCount: 3, // エラー時の再試行回数
   errorRetryInterval: 5000, // 再試行間隔（5秒）
-  shouldRetryOnError: (error) => {
+  shouldRetryOnError: error => {
     // 4xx系エラーは再試行しない
     return error.status >= 500;
   },

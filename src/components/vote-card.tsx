@@ -16,12 +16,35 @@ interface VoteCardProps {
 export function VoteCard({ vote, hasVoted = false, onShare }: VoteCardProps) {
   // カテゴリー情報をマッピング
   const getCategoryInfo = (category: string) => {
-    const categoryMap: Record<string, { emoji: string; name: string; color: { light: string; dark: string } }> = {
-      general: { emoji: '📊', name: '一般', color: { light: 'bg-blue-100 text-blue-800', dark: 'bg-blue-900 text-blue-200' } },
-      work: { emoji: '💼', name: '仕事', color: { light: 'bg-gray-100 text-gray-800', dark: 'bg-gray-900 text-gray-200' } },
-      event: { emoji: '🎉', name: 'イベント', color: { light: 'bg-green-100 text-green-800', dark: 'bg-green-900 text-green-200' } },
-      poll: { emoji: '🗳️', name: 'アンケート', color: { light: 'bg-purple-100 text-purple-800', dark: 'bg-purple-900 text-purple-200' } },
-      other: { emoji: '📋', name: 'その他', color: { light: 'bg-orange-100 text-orange-800', dark: 'bg-orange-900 text-orange-200' } },
+    const categoryMap: Record<
+      string,
+      { emoji: string; name: string; color: { light: string; dark: string } }
+    > = {
+      general: {
+        emoji: '📊',
+        name: '一般',
+        color: { light: 'bg-blue-100 text-blue-800', dark: 'bg-blue-900 text-blue-200' },
+      },
+      work: {
+        emoji: '💼',
+        name: '仕事',
+        color: { light: 'bg-gray-100 text-gray-800', dark: 'bg-gray-900 text-gray-200' },
+      },
+      event: {
+        emoji: '🎉',
+        name: 'イベント',
+        color: { light: 'bg-green-100 text-green-800', dark: 'bg-green-900 text-green-200' },
+      },
+      poll: {
+        emoji: '🗳️',
+        name: 'アンケート',
+        color: { light: 'bg-purple-100 text-purple-800', dark: 'bg-purple-900 text-purple-200' },
+      },
+      other: {
+        emoji: '📋',
+        name: 'その他',
+        color: { light: 'bg-orange-100 text-orange-800', dark: 'bg-orange-900 text-orange-200' },
+      },
     };
     return categoryMap[category] || categoryMap.other;
   };
@@ -126,12 +149,8 @@ export function VoteCard({ vote, hasVoted = false, onShare }: VoteCardProps) {
             hour: '2-digit',
             minute: '2-digit',
           })}
-          {vote.status === 'active' && !isExpired && (
-            <span> • 投票中</span>
-          )}
-          {isExpired && (
-            <span> • 期限切れ</span>
-          )}
+          {vote.status === 'active' && !isExpired && <span> • 投票中</span>}
+          {isExpired && <span> • 期限切れ</span>}
         </div>
 
         {/* アクションボタン */}

@@ -400,7 +400,7 @@ export default function CreatePage() {
                       }
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="isPublic" className="font-medium">

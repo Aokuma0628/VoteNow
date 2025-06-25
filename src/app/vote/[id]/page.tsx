@@ -31,13 +31,12 @@ import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
 import { usePoll, castVote } from '@/lib/hooks/use-polls';
-import type { PollWithDetails } from '@/types/api';
 
 export default function VoteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const pollId = Array.isArray(params.id) ? params.id[0] : params.id;
-  
+
   // SWRでデータ取得
   const { poll, isLoading, isError, error, mutate } = usePoll(pollId);
 
@@ -94,8 +93,8 @@ export default function VoteDetailPage() {
     try {
       if (pollId) {
         // API経由で投票を実行
-        const response = await castVote(pollId, { optionIds: selectedOptions });
-        
+        await castVote(pollId, { optionIds: selectedOptions });
+
         // データを再取得してUI更新
         mutate();
 
@@ -107,7 +106,10 @@ export default function VoteDetailPage() {
       }
     } catch (error) {
       console.error('投票の送信に失敗しました:', error);
-      const errorMessage = error instanceof Error ? error.message : '投票の送信に失敗しました。もう一度お試しください。';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : '投票の送信に失敗しました。もう一度お試しください。';
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -227,7 +229,11 @@ export default function VoteDetailPage() {
                 <div className="flex flex-wrap items-center gap-3 mb-3">
                   <Badge
                     variant="secondary"
-                    className={cn('gap-1', categoryInfo.color.light, 'dark:' + categoryInfo.color.dark)}
+                    className={cn(
+                      'gap-1',
+                      categoryInfo.color.light,
+                      'dark:' + categoryInfo.color.dark,
+                    )}
                   >
                     <span>{categoryInfo.emoji}</span>
                     {categoryInfo.name}
