@@ -59,11 +59,21 @@ export const pollOperations = {
       include: {
         options: {
           include: {
-            votes: true,
+            votes: {
+              include: {
+                user: true,
+                option: true,
+              },
+            },
           },
         },
         creator: true,
-        votes: true,
+        votes: {
+          include: {
+            user: true,
+            option: true,
+          },
+        },
       },
     });
   },
@@ -74,11 +84,21 @@ export const pollOperations = {
       include: {
         options: {
           include: {
-            votes: true,
+            votes: {
+              include: {
+                user: true,
+                option: true,
+              },
+            },
           },
         },
         creator: true,
-        votes: true,
+        votes: {
+          include: {
+            user: true,
+            option: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
