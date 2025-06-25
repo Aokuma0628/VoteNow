@@ -15,9 +15,9 @@ import { RealtimeStatus } from '@/components/realtime-status';
 
 export default function Home() {
   const { polls, total, isLoading, isError, error } = usePolls();
-  
+
   // リアルタイム機能
-  const { connectionStatus } = useRealtime();
+  useRealtime();
 
   // 新しい順でソート（APIからのデータは既にソート済みですが、念のため）
   const sortedPolls = useMemo(

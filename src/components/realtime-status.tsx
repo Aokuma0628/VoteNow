@@ -68,19 +68,14 @@ export function RealtimeStatus({ className, showReconnectButton = true }: Realti
       <div className="relative flex items-center">
         <Circle className={cn('h-2 w-2', styles.dotClass)} fill="currentColor" />
         {connectionStatus.status === 'connected' && (
-          <Circle
-            className="absolute h-2 w-2 bg-green-500 animate-ping"
-            fill="currentColor"
-          />
+          <Circle className="absolute h-2 w-2 bg-green-500 animate-ping" fill="currentColor" />
         )}
       </div>
 
       {/* アイコンとテキスト */}
       <div className="flex items-center gap-1">
         <IconComponent className={cn('h-4 w-4', styles.iconClass)} />
-        <span className={cn('text-sm font-medium', styles.textClass)}>
-          {styles.text}
-        </span>
+        <span className={cn('text-sm font-medium', styles.textClass)}>{styles.text}</span>
       </div>
 
       {/* 再試行回数の表示 */}
@@ -91,18 +86,13 @@ export function RealtimeStatus({ className, showReconnectButton = true }: Realti
       )}
 
       {/* 再接続ボタン */}
-      {showReconnectButton && 
-       (connectionStatus.status === 'error' || connectionStatus.status === 'disconnected') && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={reconnect}
-          className="h-6 px-2 text-xs"
-        >
-          <RefreshCw className="h-3 w-3 mr-1" />
-          再接続
-        </Button>
-      )}
+      {showReconnectButton &&
+        (connectionStatus.status === 'error' || connectionStatus.status === 'disconnected') && (
+          <Button variant="outline" size="sm" onClick={reconnect} className="h-6 px-2 text-xs">
+            <RefreshCw className="h-3 w-3 mr-1" />
+            再接続
+          </Button>
+        )}
 
       {/* 最後の接続時刻 */}
       {connectionStatus.lastConnect && (
@@ -127,10 +117,7 @@ export function RealtimeStatusDot({ className }: RealtimeStatusDotProps) {
     <div className={cn('relative flex items-center', className)}>
       <Circle className={cn('h-2 w-2', styles.dotClass)} fill="currentColor" />
       {connectionStatus.status === 'connected' && (
-        <Circle
-          className="absolute h-2 w-2 bg-green-500 animate-ping"
-          fill="currentColor"
-        />
+        <Circle className="absolute h-2 w-2 bg-green-500 animate-ping" fill="currentColor" />
       )}
     </div>
   );

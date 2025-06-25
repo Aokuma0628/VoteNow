@@ -43,7 +43,7 @@ export default function VoteDetailPage() {
   const { poll, isLoading, isError, error, mutate } = usePoll(pollId);
 
   // リアルタイム機能
-  const { connectionStatus, isConnected } = useRealtimePoll(pollId);
+  const { isConnected } = useRealtimePoll(pollId);
 
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
@@ -511,9 +511,7 @@ export default function VoteDetailPage() {
                   <RealtimeStatus showReconnectButton={true} />
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">自動更新</span>
-                    <span className="text-sm font-medium">
-                      {isConnected ? '有効' : '無効'}
-                    </span>
+                    <span className="text-sm font-medium">{isConnected ? '有効' : '無効'}</span>
                   </div>
                   <div className="text-xs text-stone-500 dark:text-stone-400">
                     他のユーザーの投票結果がリアルタイムで反映されます

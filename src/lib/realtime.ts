@@ -17,7 +17,7 @@ export function broadcastUpdate(data: {
   const encoded = new TextEncoder().encode(`data: ${message}\n\n`);
 
   // すべての接続されたクライアントに送信
-  clients.forEach((controller) => {
+  clients.forEach(controller => {
     try {
       controller.enqueue(encoded);
     } catch {

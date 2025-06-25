@@ -48,7 +48,6 @@ export async function GET(request: NextRequest) {
   });
 }
 
-
 // OPTIONS リクエストのサポート（CORS対応）
 export async function OPTIONS() {
   return new Response(null, {
