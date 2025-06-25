@@ -11,11 +11,11 @@ import {
   Cell,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Vote } from '@/types/vote';
+import type { PollWithDetails } from '@/types/api';
 import { useMemo } from 'react';
 
 interface VoteChartProps {
-  vote: Vote;
+  vote: PollWithDetails;
   className?: string;
 }
 
@@ -39,8 +39,9 @@ export function VoteChart({ vote, className }: VoteChartProps) {
     return vote.options.map((option, index) => ({
       name: option.text.length > 15 ? `${option.text.slice(0, 15)}...` : option.text,
       fullName: option.text,
-      votes: option.votes,
-      percentage: vote.totalVotes > 0 ? ((option.votes / vote.totalVotes) * 100).toFixed(1) : '0.0',
+      votes: option._count.votes,
+      percentage:
+        vote.totalVotes > 0 ? ((option._count.votes / vote.totalVotes) * 100).toFixed(1) : '0.0',
       color: COLORS[index % COLORS.length],
     }));
   }, [vote.options, vote.totalVotes]);

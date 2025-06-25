@@ -1,20 +1,20 @@
 'use client';
 
 import { CheckCircle } from 'lucide-react';
-import { VoteOption } from '@/types/vote';
 import { cn } from '@/lib/utils';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useMemo } from 'react';
+import type { PollOptionWithVotes } from '@/types/api';
 
 interface VoteResultsProps {
-  options: VoteOption[];
+  options: PollOptionWithVotes[];
   totalVotes: number;
   userSelectedOptions?: string[];
   _allowMultiple?: boolean;
 }
 
 interface ResultBarProps {
-  option: VoteOption;
+  option: PollOptionWithVotes;
   totalVotes: number;
   isWinner: boolean;
   isUserSelection: boolean;
@@ -22,7 +22,8 @@ interface ResultBarProps {
 }
 
 function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: ResultBarProps) {
-  const percentage = totalVotes > 0 ? ((option.votes / totalVotes) * 100).toFixed(1) : '0.0';
+  const optionVotes = option._count.votes;
+  const percentage = totalVotes > 0 ? ((optionVotes / totalVotes) * 100).toFixed(1) : '0.0';
 
   // 順位に応じた色を決定
   const getBarColorClass = () => {
@@ -42,7 +43,7 @@ function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: Resu
           )}
         </span>
         <div className="text-right">
-          <span className="font-semibold text-stone-800 dark:text-stone-200">{option.votes}票</span>
+          <span className="font-semibold text-stone-800 dark:text-stone-200">{optionVotes}票</span>
           <span className="text-sm text-stone-500 dark:text-stone-400 ml-1">({percentage}%)</span>
         </div>
       </div>
@@ -83,18 +84,18 @@ export function VoteResults({
   _allowMultiple,
 }: VoteResultsProps) {
   // 投票数でソート
-  const sortedOptions = [...options].sort((a, b) => b.votes - a.votes);
+  const sortedOptions = [...options].sort((a, b) => b._count.votes - a._count.votes);
 
   // 最高票を獲得したオプションを特定
-  const maxVotes = Math.max(...options.map(opt => opt.votes));
+  const maxVotes = Math.max(...options.map(opt => opt._count.votes));
 
   // Recharts用のチャートデータを準備
   const chartData = useMemo(() => {
     return sortedOptions.map((option, index) => ({
       name: option.text,
-      value: option.votes,
+      value: option._count.votes,
       color: COLORS[index % COLORS.length],
-      percentage: totalVotes > 0 ? ((option.votes / totalVotes) * 100).toFixed(1) : '0.0',
+      percentage: totalVotes > 0 ? ((option._count.votes / totalVotes) * 100).toFixed(1) : '0.0',
     }));
   }, [sortedOptions, totalVotes]);
 
@@ -168,7 +169,7 @@ export function VoteResults({
             key={option.id}
             option={option}
             totalVotes={totalVotes}
-            isWinner={option.votes === maxVotes && option.votes > 0}
+            isWinner={option._count.votes === maxVotes && option._count.votes > 0}
             isUserSelection={userSelectedOptions.includes(option.id)}
             rank={index + 1}
           />

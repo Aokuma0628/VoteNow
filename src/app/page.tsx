@@ -8,41 +8,40 @@ import { StatsCard } from '@/components/stats-card';
 import { EmptyState } from '@/components/empty-state';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
-import { useVotes } from '@/providers/vote-provider';
+import { usePolls } from '@/lib/hooks/use-polls';
 import { useMemo } from 'react';
-import { VOTE_STATUS } from '@/types/vote';
 
 export default function Home() {
-  const { votes, getUserVotes } = useVotes();
+  const { polls, total, isLoading, isError, error } = usePolls();
 
-  // 新しい順でソート
-  const sortedVotes = useMemo(
+  // 新しい順でソート（APIからのデータは既にソート済みですが、念のため）
+  const sortedPolls = useMemo(
     () =>
-      [...votes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [votes],
+      [...polls].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [polls],
   );
 
   // 統計情報を計算
   const stats = useMemo(() => {
-    const activeVotes = votes.filter(vote => vote.status === VOTE_STATUS.ACTIVE);
+    const activePolls = polls.filter(poll => poll.status === 'active');
     return {
-      active: activeVotes.length,
-      total: votes.length,
+      active: activePolls.length,
+      total,
     };
-  }, [votes]);
+  }, [polls, total]);
 
   // 投票の共有機能
-  const handleShare = async (voteId: string) => {
-    const vote = votes.find(v => v.id === voteId);
-    if (!vote) return;
+  const handleShare = async (pollId: string) => {
+    const poll = polls.find(p => p.id === pollId);
+    if (!poll) return;
 
-    const url = `${window.location.origin}/vote/${voteId}`;
+    const url = `${window.location.origin}/vote/${pollId}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: vote.title,
-          text: vote.description || '投票に参加してください！',
+          title: poll.title,
+          text: poll.description || '投票に参加してください！',
           url: url,
         });
       } catch {
@@ -53,13 +52,26 @@ export default function Home() {
       // Web Share API が利用できない場合はクリップボードにコピー
       try {
         await navigator.clipboard.writeText(url);
-        // 実際のアプリでは通知コンポーネントを表示
         toast.success('リンクをコピーしました');
       } catch (error) {
         console.error('クリップボードへのコピーに失敗しました:', error);
       }
     }
   };
+
+  // エラー表示
+  if (isError) {
+    return (
+      <AppLayout>
+        <div className="max-w-6xl mx-auto text-center py-12">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">エラーが発生しました</h2>
+          <p className="text-stone-600 dark:text-stone-400">
+            {error?.message || '投票データの取得に失敗しました'}
+          </p>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -103,13 +115,27 @@ export default function Home() {
 
         {/* 投票一覧セクション */}
         <section>
-          {sortedVotes.length > 0 ? (
+          {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedVotes.map(vote => (
+              {/* ローディングスケルトン */}
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="h-64 animate-pulse">
+                  <CardContent className="p-6">
+                    <div className="h-4 bg-stone-200 dark:bg-stone-700 rounded mb-4"></div>
+                    <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded mb-2"></div>
+                    <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded mb-6"></div>
+                    <div className="h-8 bg-stone-200 dark:bg-stone-700 rounded"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : sortedPolls.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedPolls.map(poll => (
                 <VoteCard
-                  key={vote.id}
-                  vote={vote}
-                  hasVoted={getUserVotes(vote.id).length > 0}
+                  key={poll.id}
+                  vote={poll}
+                  hasVoted={false} // TODO: 後でユーザーの投票状況を確認する機能を追加
                   onShare={handleShare}
                 />
               ))}
