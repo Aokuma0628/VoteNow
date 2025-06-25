@@ -40,7 +40,8 @@ export function VoteChart({ vote, className }: VoteChartProps) {
       name: option.text.length > 15 ? `${option.text.slice(0, 15)}...` : option.text,
       fullName: option.text,
       votes: option._count.votes,
-      percentage: vote.totalVotes > 0 ? ((option._count.votes / vote.totalVotes) * 100).toFixed(1) : '0.0',
+      percentage:
+        vote.totalVotes > 0 ? ((option._count.votes / vote.totalVotes) * 100).toFixed(1) : '0.0',
       color: COLORS[index % COLORS.length],
     }));
   }, [vote.options, vote.totalVotes]);
