@@ -11,6 +11,7 @@ import {
   parseRequestBody,
 } from '@/lib/api-utils';
 import type { PollsListResponse, CreatePollRequest } from '@/types/api';
+import { broadcastUpdate } from '../events/route';
 
 // GET /api/polls - 投票一覧取得
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -176,6 +177,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       votes: createdPoll.votes.length,
     },
   };
+
+  // リアルタイム通知を送信
+  broadcastUpdate({
+    type: 'poll_created',
+    pollId: pollWithStats.id,
+    data: pollWithStats,
+  });
 
   return createSuccessResponse(pollWithStats, '投票が作成されました', 201);
 });

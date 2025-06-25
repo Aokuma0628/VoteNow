@@ -10,6 +10,7 @@ import {
   validateArray,
 } from '@/lib/api-utils';
 import type { CastVoteRequest } from '@/types/api';
+import { broadcastUpdate } from '../../events/route';
 
 // POST /api/polls/[id]/vote - 投票実行
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -171,6 +172,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         votes: updatedPoll.votes.length,
       },
     };
+
+    // リアルタイム通知を送信
+    broadcastUpdate({
+      type: 'vote_cast',
+      pollId: pollId,
+      data: {
+        votes: votesWithDetails,
+        poll: pollWithDetails,
+      },
+    });
 
     return createSuccessResponse(
       {
