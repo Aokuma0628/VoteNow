@@ -4,6 +4,7 @@ import { Moon, Plus, Sun, Vote } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/providers/theme-provider';
+import { RealtimeStatusDot } from '@/components/realtime-status';
 
 interface HeaderProps {
   title?: string;
@@ -19,8 +20,9 @@ export function Header({ title, actions }: HeaderProps) {
         <div className="flex items-center justify-between">
           {/* ロゴ・タイトル */}
           <Link href="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-emerald-100 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-emerald-100 dark:bg-emerald-900 border border-emerald-200 dark:border-emerald-700 relative">
               <Vote className="h-5 w-5 text-emerald-600" />
+              <RealtimeStatusDot className="absolute -top-1 -right-1" />
             </div>
             <div>
               <h1 className="text-2xl font-bold transition-colors duration-300 text-stone-800 dark:text-stone-200">

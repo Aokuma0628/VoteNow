@@ -31,6 +31,8 @@ import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
 import { usePoll, castVote } from '@/lib/hooks/use-polls';
+import { useRealtimePoll } from '@/lib/hooks/use-realtime';
+import { RealtimeStatus } from '@/components/realtime-status';
 
 export default function VoteDetailPage() {
   const params = useParams();
@@ -39,6 +41,9 @@ export default function VoteDetailPage() {
 
   // SWRでデータ取得
   const { poll, isLoading, isError, error, mutate } = usePoll(pollId);
+
+  // リアルタイム機能
+  const { connectionStatus, isConnected } = useRealtimePoll(pollId);
 
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
@@ -491,6 +496,27 @@ export default function VoteDetailPage() {
                     >
                       {isExpired ? '終了済み' : '投票中'}
                     </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* リアルタイム状態 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">リアルタイム更新</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <RealtimeStatus showReconnectButton={true} />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-stone-600 dark:text-stone-400">自動更新</span>
+                    <span className="text-sm font-medium">
+                      {isConnected ? '有効' : '無効'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-stone-500 dark:text-stone-400">
+                    他のユーザーの投票結果がリアルタイムで反映されます
                   </div>
                 </div>
               </CardContent>
