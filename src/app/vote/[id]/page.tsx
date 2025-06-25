@@ -27,60 +27,50 @@ import {
 } from '@/components/ui/dialog';
 import { VoteResults } from '@/components/vote-results';
 import { VoteChart } from '@/components/vote-chart';
-import { Vote, VOTE_CATEGORIES, VOTE_STATUS } from '@/types/vote';
 import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
-import { useVotes } from '@/providers/vote-provider';
+import { usePoll, castVote } from '@/lib/hooks/use-polls';
+import type { PollWithDetails } from '@/types/api';
 
 export default function VoteDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const voteId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { getVote, castVote, getUserVotes } = useVotes();
+  const pollId = Array.isArray(params.id) ? params.id[0] : params.id;
+  
+  // SWRでデータ取得
+  const { poll, isLoading, isError, error, mutate } = usePoll(pollId);
 
-  const [vote, setVote] = useState<Vote | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
   const [userVoteOptions, setUserVoteOptions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!voteId) return;
+    if (poll) {
+      // TODO: 実際のユーザー認証機能実装後に、ユーザーの投票履歴をチェック
+      // 現在は仮で設定
+      const hasUserVoted = false; // 実際のロジックに置き換え
+      setHasVoted(hasUserVoted);
 
-    // ローディングシミュレーション
-    setTimeout(() => {
-      // 投票データを取得
-      const foundVote = getVote(voteId);
-      if (foundVote) {
-        setVote(foundVote);
-
-        // ユーザーが既に投票しているかチェック
-        const userOptions = getUserVotes(voteId);
-        const hasUserVoted = userOptions.length > 0;
-        setHasVoted(hasUserVoted);
-
-        if (hasUserVoted) {
-          setUserVoteOptions(userOptions);
-          setShowResults(true);
-        } else {
-          setShowResults(foundVote.status === VOTE_STATUS.CLOSED);
-        }
+      if (hasUserVoted) {
+        setUserVoteOptions([]); // 実際のユーザー投票履歴を設定
+        setShowResults(true);
+      } else {
+        setShowResults(poll.status === 'closed');
       }
-      setIsLoading(false);
-    }, 800);
-  }, [voteId, getVote, getUserVotes]);
+    }
+  }, [poll]);
 
   const handleShare = () => {
     const url = window.location.href;
 
     if (navigator.share) {
       navigator.share({
-        title: vote?.title || '投票',
-        text: vote?.description || '投票に参加してください！',
+        title: poll?.title || '投票',
+        text: poll?.description || '投票に参加してください！',
         url: url,
       });
     } else {
@@ -102,28 +92,23 @@ export default function VoteDetailPage() {
 
     // 投票処理
     try {
-      // 2秒のシミュレーション
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (pollId) {
+        // API経由で投票を実行
+        const response = await castVote(pollId, { optionIds: selectedOptions });
+        
+        // データを再取得してUI更新
+        mutate();
 
-      // 投票を実行
-      if (voteId) {
-        castVote(voteId, selectedOptions);
-
-        // 最新の投票データを取得
-        const updatedVote = getVote(voteId);
-        if (updatedVote) {
-          setVote(updatedVote);
-        }
+        // ユーザーの投票履歴を更新
+        setHasVoted(true);
+        setUserVoteOptions(selectedOptions);
+        setShowResults(true);
+        toast.success('投票が完了しました！');
       }
-
-      // ユーザーの投票履歴を更新
-      setHasVoted(true);
-      setUserVoteOptions(selectedOptions);
-      setShowResults(true);
-      toast.success('投票が完了しました！');
     } catch (error) {
       console.error('投票の送信に失敗しました:', error);
-      toast.error('投票の送信に失敗しました。もう一度お試しください。');
+      const errorMessage = error instanceof Error ? error.message : '投票の送信に失敗しました。もう一度お試しください。';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -132,7 +117,7 @@ export default function VoteDetailPage() {
   const handleOptionSelect = (optionId: string) => {
     if (!canVote) return;
 
-    if (vote?.allowMultiple) {
+    if (poll?.allowMultiple) {
       // 複数選択の場合
       setSelectedOptions(prev =>
         prev.includes(optionId) ? prev.filter(id => id !== optionId) : [...prev, optionId],
@@ -145,13 +130,8 @@ export default function VoteDetailPage() {
 
   const refreshResults = () => {
     // 結果を更新
-    if (voteId) {
-      const updatedVote = getVote(voteId);
-      if (updatedVote) {
-        setVote(updatedVote);
-        toast.info('結果を更新しました');
-      }
-    }
+    mutate();
+    toast.info('結果を更新しました');
   };
 
   // ローディング中
@@ -181,16 +161,20 @@ export default function VoteDetailPage() {
   }
 
   // エラー状態
-  if (!vote) {
+  if (isError || (!isLoading && !poll)) {
     return (
       <AppLayout>
         <div className="max-w-4xl mx-auto px-6 py-8">
           <Card>
             <CardContent className="p-8 text-center">
               <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">投票が見つかりません</h2>
+              <h2 className="text-xl font-semibold mb-2">
+                {isError ? 'エラーが発生しました' : '投票が見つかりません'}
+              </h2>
               <p className="text-stone-600 dark:text-stone-400 mb-4">
-                指定された投票は存在しないか、削除された可能性があります
+                {isError
+                  ? error?.message || '投票データの取得に失敗しました'
+                  : '指定された投票は存在しないか、削除された可能性があります'}
               </p>
               <Button onClick={() => router.push('/')}>ホームに戻る</Button>
             </CardContent>
@@ -200,11 +184,21 @@ export default function VoteDetailPage() {
     );
   }
 
-  const category = VOTE_CATEGORIES[vote.category];
+  if (!poll) return null; // ローディング中やデータなしの場合
+
+  // カテゴリー情報を定義（APIデータから取得できない場合の仮設定）
+  const categoryInfo = {
+    name: poll.category,
+    emoji: '📊',
+    color: {
+      light: 'bg-blue-100 text-blue-800',
+      dark: 'bg-blue-900 text-blue-200',
+    },
+  };
 
   // 期限チェック
-  const isExpired = vote.expiresAt ? new Date() > vote.expiresAt : false;
-  const canVote = vote.status === VOTE_STATUS.ACTIVE && !hasVoted && !isExpired;
+  const isExpired = poll.expiresAt ? new Date() > new Date(poll.expiresAt) : false;
+  const canVote = poll.status === 'active' && !hasVoted && !isExpired;
 
   return (
     <AppLayout
@@ -233,13 +227,13 @@ export default function VoteDetailPage() {
                 <div className="flex flex-wrap items-center gap-3 mb-3">
                   <Badge
                     variant="secondary"
-                    className={cn('gap-1', category.color.light, 'dark:' + category.color.dark)}
+                    className={cn('gap-1', categoryInfo.color.light, 'dark:' + categoryInfo.color.dark)}
                   >
-                    <span>{category.emoji}</span>
-                    {category.name}
+                    <span>{categoryInfo.emoji}</span>
+                    {categoryInfo.name}
                   </Badge>
-                  <Badge variant={vote.status === VOTE_STATUS.ACTIVE ? 'default' : 'destructive'}>
-                    {vote.status === VOTE_STATUS.ACTIVE ? '進行中' : '終了'}
+                  <Badge variant={poll.status === 'active' ? 'default' : 'destructive'}>
+                    {poll.status === 'active' ? '進行中' : '終了'}
                   </Badge>
                   {hasVoted && (
                     <Badge
@@ -251,22 +245,22 @@ export default function VoteDetailPage() {
                     </Badge>
                   )}
                 </div>
-                <h1 className="text-2xl font-bold mb-3">{vote.title}</h1>
-                {vote.description && (
+                <h1 className="text-2xl font-bold mb-3">{poll.title}</h1>
+                {poll.description && (
                   <p className="text-stone-600 dark:text-stone-400 leading-relaxed">
-                    {vote.description}
+                    {poll.description}
                   </p>
                 )}
               </div>
             </div>
 
-            {vote.status === VOTE_STATUS.ACTIVE && !isExpired && vote.expiresAt && (
+            {poll.status === 'active' && !isExpired && poll.expiresAt && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
                   <Clock className="h-4 w-4" />
                   <span className="font-medium">
-                    期限: {vote.expiresAt.toLocaleDateString('ja-JP')}{' '}
-                    {vote.expiresAt.toLocaleTimeString('ja-JP', {
+                    期限: {new Date(poll.expiresAt).toLocaleDateString('ja-JP')}{' '}
+                    {new Date(poll.expiresAt).toLocaleTimeString('ja-JP', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
@@ -289,9 +283,9 @@ export default function VoteDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {vote.allowMultiple ? (
+                    {poll.allowMultiple ? (
                       // 複数選択の場合：Checkboxを使用
-                      vote.options.map(option => (
+                      poll.options.map(option => (
                         <label
                           key={option.id}
                           className={cn(
@@ -326,7 +320,7 @@ export default function VoteDetailPage() {
                         value={selectedOptions[0] || ''}
                         onValueChange={value => setSelectedOptions([value])}
                       >
-                        {vote.options.map(option => (
+                        {poll.options.map(option => (
                           <div
                             key={option.id}
                             className={cn(
@@ -385,7 +379,7 @@ export default function VoteDetailPage() {
                   <div className="text-sm text-stone-500">
                     <strong>あなたの投票:</strong>
                     <br />
-                    {vote.options
+                    {poll.options
                       .filter(opt => userVoteOptions.includes(opt.id))
                       .map(opt => `• ${opt.text}`)
                       .join('\n')}
@@ -398,7 +392,7 @@ export default function VoteDetailPage() {
             {showResults || !canVote ? (
               <div className="space-y-6">
                 {/* グラフ表示 */}
-                <VoteChart vote={vote} />
+                <VoteChart vote={poll} />
 
                 {/* 詳細結果 */}
                 <Card>
@@ -412,10 +406,10 @@ export default function VoteDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <VoteResults
-                      options={vote.options}
-                      totalVotes={vote.totalVotes}
+                      options={poll.options}
+                      totalVotes={poll.totalVotes}
                       userSelectedOptions={userVoteOptions}
-                      _allowMultiple={vote.allowMultiple}
+                      _allowMultiple={poll.allowMultiple}
                     />
                   </CardContent>
                 </Card>
@@ -440,16 +434,16 @@ export default function VoteDetailPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">総投票数</span>
-                    <span className="font-semibold">{vote.totalVotes}</span>
+                    <span className="font-semibold">{poll.totalVotes}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">選択肢数</span>
-                    <span className="font-semibold">{vote.options.length}</span>
+                    <span className="font-semibold">{poll.options.length}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">投票方式</span>
                     <span className="text-sm font-medium">
-                      {vote.allowMultiple ? '複数選択' : '単一選択'}
+                      {poll.allowMultiple ? '複数選択' : '単一選択'}
                     </span>
                   </div>
                 </div>
@@ -466,8 +460,8 @@ export default function VoteDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">作成日時</span>
                     <span className="text-sm font-medium">
-                      {vote.createdAt.toLocaleDateString('ja-JP')}{' '}
-                      {vote.createdAt.toLocaleTimeString('ja-JP', {
+                      {new Date(poll.createdAt).toLocaleDateString('ja-JP')}{' '}
+                      {new Date(poll.createdAt).toLocaleTimeString('ja-JP', {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
@@ -476,8 +470,8 @@ export default function VoteDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-stone-600 dark:text-stone-400">終了予定</span>
                     <span className="text-sm font-medium">
-                      {vote.expiresAt
-                        ? `${vote.expiresAt.toLocaleDateString('ja-JP')} ${vote.expiresAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`
+                      {poll.expiresAt
+                        ? `${new Date(poll.expiresAt).toLocaleDateString('ja-JP')} ${new Date(poll.expiresAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`
                         : '未設定'}
                     </span>
                   </div>
@@ -514,7 +508,7 @@ export default function VoteDetailPage() {
           <div className="bg-stone-50 dark:bg-stone-800 p-3 rounded-lg my-4">
             <strong className="text-sm">選択した項目:</strong>
             <div className="mt-1 text-sm">
-              {vote.options
+              {poll.options
                 .filter(opt => selectedOptions.includes(opt.id))
                 .map(opt => (
                   <div key={opt.id}>• {opt.text}</div>
