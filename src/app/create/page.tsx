@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Minus, Info, List, Settings, Rocket } from 'lucide-react';
+import { Plus, Minus, Info, List, Settings, Rocket, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,17 +18,21 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { AppLayout } from '@/components/layout/app-layout';
-import { VOTE_CATEGORIES, type VoteCategoryId, VOTE_STATUS } from '@/types/vote';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useVotes } from '@/providers/vote-provider';
+import { createPoll } from '@/lib/hooks/use-polls';
+import type { CreatePollRequest } from '@/types/api';
+
+// カテゴリの型定義（API対応）
+type CategoryType = 'general' | 'work' | 'event' | 'poll' | 'other';
 
 interface FormData {
   title: string;
   description: string;
-  category: VoteCategoryId | '';
+  category: CategoryType | '';
   options: string[];
   allowMultiple: boolean;
+  allowAddOptions: boolean;
   isPublic: boolean;
   expiresAt: string;
 }
@@ -41,7 +45,7 @@ interface ValidationErrors {
 
 export default function CreatePage() {
   const router = useRouter();
-  const { addVote } = useVotes();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>(() => ({
     title: '',
@@ -49,6 +53,7 @@ export default function CreatePage() {
     category: '',
     options: ['', ''],
     allowMultiple: false,
+    allowAddOptions: false,
     isPublic: true,
     expiresAt: '',
   }));
@@ -134,42 +139,42 @@ export default function CreatePage() {
         return;
       }
 
+      setIsSubmitting(true);
+
       try {
         const validOptions = formData.options.filter(opt => opt.trim().length > 0);
 
-        // 投票を作成
-        addVote({
+        // API用のリクエストデータを作成
+        const pollData: CreatePollRequest = {
           title: formData.title.trim(),
           description: formData.description.trim() || undefined,
-          category: formData.category as VoteCategoryId,
-          status: VOTE_STATUS.ACTIVE,
-          expiresAt: formData.expiresAt ? new Date(formData.expiresAt) : undefined,
-          createdBy: {
-            id: 'current-user',
-            name: '現在のユーザー',
-            avatar: null,
-          },
-          options: validOptions.map((text, index) => ({
-            id: `opt-${Date.now()}-${index}`,
-            text: text.trim(),
-            votes: 0,
-          })),
-          totalVotes: 0,
+          category: formData.category as CategoryType,
           allowMultiple: formData.allowMultiple,
-          allowAddOptions: false,
+          allowAddOptions: formData.allowAddOptions,
           isPublic: formData.isPublic,
-        });
+          expiresAt: formData.expiresAt ? formData.expiresAt : undefined,
+          options: validOptions.map(text => ({
+            text: text.trim(),
+            description: undefined,
+          })),
+        };
+
+        // API経由で投票を作成
+        const response = await createPoll(pollData);
 
         toast.success('投票を作成しました！');
 
-        // ホームページにリダイレクト
-        router.push('/');
+        // 作成した投票の詳細ページにリダイレクト
+        router.push(`/vote/${response.data.id}`);
       } catch (error) {
-        console.error('Error creating vote:', error);
-        toast.error('投票の作成に失敗しました');
+        console.error('Error creating poll:', error);
+        const errorMessage = error instanceof Error ? error.message : '投票の作成に失敗しました';
+        toast.error(errorMessage);
+      } finally {
+        setIsSubmitting(false);
       }
     },
-    [formData, validateForm, router, addVote],
+    [formData, validateForm, router],
   );
 
   // バリデーション状態をメモ化
@@ -249,7 +254,7 @@ export default function CreatePage() {
                   </Label>
                   <Select
                     value={formData.category}
-                    onValueChange={(value: VoteCategoryId) =>
+                    onValueChange={(value: CategoryType) =>
                       setFormData(prev => ({ ...prev, category: value }))
                     }
                   >
@@ -257,11 +262,11 @@ export default function CreatePage() {
                       <SelectValue placeholder="カテゴリを選択してください" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.values(VOTE_CATEGORIES).map(category => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.emoji} {category.name}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="general">📊 一般</SelectItem>
+                      <SelectItem value="work">💼 仕事</SelectItem>
+                      <SelectItem value="event">🎉 イベント</SelectItem>
+                      <SelectItem value="poll">🗳️ アンケート</SelectItem>
+                      <SelectItem value="other">📋 その他</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.category && (
@@ -380,6 +385,24 @@ export default function CreatePage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
+                      <Label htmlFor="allowAddOptions" className="font-medium">
+                        選択肢の追加を許可
+                      </Label>
+                      <div className="text-sm text-stone-600">
+                        投票者が新しい選択肢を追加できるようにします
+                      </div>
+                    </div>
+                    <Switch
+                      id="allowAddOptions"
+                      checked={formData.allowAddOptions}
+                      onCheckedChange={checked =>
+                        setFormData(prev => ({ ...prev, allowAddOptions: checked }))
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
                       <Label htmlFor="isPublic" className="font-medium">
                         公開投票
                       </Label>
@@ -401,9 +424,18 @@ export default function CreatePage() {
 
             {/* アクションボタン */}
             <div className="flex justify-center">
-              <Button type="submit" disabled={!isFormValid}>
-                <Rocket className="h-4 w-4 mr-2" />
-                投票を作成
+              <Button type="submit" disabled={!isFormValid || isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    作成中...
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="h-4 w-4 mr-2" />
+                    投票を作成
+                  </>
+                )}
               </Button>
             </div>
           </form>
