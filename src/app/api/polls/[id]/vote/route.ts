@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { pollOperations, voteOperations } from '@/lib/database';
+import { pollOperations, voteOperations, userOperations } from '@/lib/database';
 import {
   createSuccessResponse,
   createNotFoundError,
@@ -55,8 +55,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return createValidationError('この投票では複数選択できません');
     }
 
-    // セッションIDをユーザー識別子として使用（ログイン不要）
-    const userId = await getOrCreateSessionId();
+    // セッションIDを取得し、ゲストユーザーを作成または取得
+    const sessionId = await getOrCreateSessionId();
+    const user = await userOperations.findOrCreateGuest(sessionId);
+    const userId = user.id;
 
     // 既存の投票確認
     const existingVotes = await voteOperations.findUserVoteForPoll(userId, pollId);

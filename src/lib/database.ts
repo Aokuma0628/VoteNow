@@ -31,6 +31,25 @@ export const userOperations = {
       where: { name },
     });
   },
+
+  // ゲストユーザーを取得または作成
+  async findOrCreateGuest(sessionId: string): Promise<User> {
+    const existingUser = await prisma.user.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    return prisma.user.create({
+      data: {
+        id: sessionId,
+        name: 'ゲスト',
+        avatar: null,
+      },
+    });
+  },
 };
 
 // Poll関連の操作

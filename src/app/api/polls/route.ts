@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { pollOperations } from '@/lib/database';
+import { pollOperations, userOperations } from '@/lib/database';
 import {
   createSuccessResponse,
   createMethodNotAllowedError,
@@ -125,8 +125,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
   }
 
-  // セッションIDを作成者IDとして使用
-  const createdBy = await getOrCreateSessionId();
+  // セッションIDを取得し、ゲストユーザーを作成または取得
+  const sessionId = await getOrCreateSessionId();
+  const user = await userOperations.findOrCreateGuest(sessionId);
+  const createdBy = user.id;
 
   // 投票を作成
   const poll = await pollOperations.create({
