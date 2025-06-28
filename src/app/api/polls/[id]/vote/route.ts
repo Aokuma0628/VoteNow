@@ -6,13 +6,12 @@ import {
   createValidationError,
   createMethodNotAllowedError,
   createServerError,
-  createAuthError,
   parseRequestBody,
   validateArray,
 } from '@/lib/api-utils';
 import type { CastVoteRequest } from '@/types/api';
 import { broadcastUpdate } from '@/lib/realtime';
-import { getSession } from '@/lib/session';
+import { getSession, getOrCreateSessionId } from '@/lib/session';
 
 // POST /api/polls/[id]/vote - 投票実行
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -56,12 +55,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return createValidationError('この投票では複数選択できません');
     }
 
-    // セッションからユーザー情報を取得
+    // セッションIDをユーザー識別子として使用（ログイン不要）
+    const sessionId = await getOrCreateSessionId();
     const session = await getSession();
-    if (!session.userId) {
-      return createAuthError('投票するにはログインが必要です');
-    }
-    const userId = session.userId;
+
+    // ログイン済みの場合はユーザーIDを、未ログインの場合はセッションIDを使用
+    const userId = session.userId || sessionId;
 
     // 既存の投票確認
     const existingVotes = await voteOperations.findUserVoteForPoll(userId, pollId);
@@ -103,7 +102,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       const option = updatedPoll.options.find(opt => opt.id === vote.optionId);
       const user = {
         id: userId,
-        name: session.userName || 'ユーザー',
+        name: session.userName || (session.userId ? 'ユーザー' : 'ゲスト'),
         avatar: session.userAvatar || null,
       };
 

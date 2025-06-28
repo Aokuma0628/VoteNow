@@ -1,7 +1,9 @@
 import { getIronSession, SessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
+import { randomUUID } from 'crypto';
 
 export interface SessionData {
+  sessionId: string;
   userId?: string;
   userName?: string;
   userAvatar?: string | null;
@@ -20,5 +22,18 @@ export const sessionOptions: SessionOptions = {
 
 export async function getSession() {
   const cookieStore = await cookies();
-  return getIronSession<SessionData>(cookieStore, sessionOptions);
+  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+
+  // セッションIDが存在しない場合は新規作成
+  if (!session.sessionId) {
+    session.sessionId = randomUUID();
+    await session.save();
+  }
+
+  return session;
+}
+
+export async function getOrCreateSessionId() {
+  const session = await getSession();
+  return session.sessionId;
 }
