@@ -12,6 +12,7 @@ import {
 } from '@/lib/api-utils';
 import type { PollsListResponse, CreatePollRequest } from '@/types/api';
 import { broadcastUpdate } from '@/lib/realtime';
+import { getOrCreateSessionId } from '@/lib/session';
 
 // GET /api/polls - 投票一覧取得
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -124,9 +125,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
   }
 
-  // TODO: 実際のアプリでは認証されたユーザーIDを使用
-  // 今回は仮のユーザーIDを使用
-  const createdBy = 'temp-user-id';
+  // セッションIDを作成者IDとして使用
+  const createdBy = await getOrCreateSessionId();
 
   // 投票を作成
   const poll = await pollOperations.create({
