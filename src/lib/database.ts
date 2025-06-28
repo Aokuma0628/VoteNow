@@ -34,8 +34,12 @@ export const userOperations = {
 
   // ゲストユーザーを取得または作成
   async findOrCreateGuest(sessionId: string): Promise<User> {
-    const existingUser = await prisma.user.findUnique({
-      where: { id: sessionId },
+    // sessionIdでユーザーを検索（カスタムフィールドが必要な場合は別途追加）
+    // まず既存の実装を維持するためにsessionIdをnameの一部として保存
+    const guestName = `ゲスト_${sessionId}`;
+
+    const existingUser = await prisma.user.findFirst({
+      where: { name: guestName },
     });
 
     if (existingUser) {
@@ -44,8 +48,7 @@ export const userOperations = {
 
     return prisma.user.create({
       data: {
-        id: sessionId,
-        name: 'ゲスト',
+        name: guestName,
         avatar: null,
       },
     });
