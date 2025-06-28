@@ -113,8 +113,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
   });
 
-  // 期限の検証
-  let expiresAt: Date | undefined;
+  // 期限の検証と自動設定
+  let expiresAt: Date;
   if (body.expiresAt) {
     expiresAt = new Date(body.expiresAt);
     if (isNaN(expiresAt.getTime())) {
@@ -123,6 +123,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     if (expiresAt <= new Date()) {
       throw new Error('期限は現在時刻より後である必要があります');
     }
+  } else {
+    // 期限が未設定の場合は1週間後に自動設定
+    expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
   }
 
   // セッションIDを取得し、ゲストユーザーを作成または取得
