@@ -179,7 +179,7 @@ export const voteOperations = {
   },
 
   // 特定の投票に対するユーザーの投票を取得
-  async findUserVoteForPoll(userId: string, pollId: string): Promise<Vote[]> {
+  async findUserVoteForPoll(userId: string, pollId: string) {
     return prisma.vote.findMany({
       where: {
         userId,

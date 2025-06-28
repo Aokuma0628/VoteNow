@@ -83,3 +83,21 @@ export async function castVote(
 
   return response.json();
 }
+
+// ユーザーの投票履歴取得フック
+export function useUserVotes(pollId: string | null | undefined) {
+  const { data, error, isLoading, mutate } = useSWR(
+    pollId ? `/api/polls/${pollId}/user-votes` : null,
+    fetcher,
+  );
+
+  return {
+    hasVoted: data?.data?.hasVoted || false,
+    votes: data?.data?.votes || [],
+    optionIds: data?.data?.optionIds || [],
+    isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}

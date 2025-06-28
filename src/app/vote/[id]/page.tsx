@@ -30,7 +30,7 @@ import { VoteChart } from '@/components/vote-chart';
 import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
-import { usePoll, castVote } from '@/lib/hooks/use-polls';
+import { usePoll, castVote, useUserVotes } from '@/lib/hooks/use-polls';
 import { useRealtimePoll } from '@/lib/hooks/use-realtime';
 import { RealtimeStatus } from '@/components/realtime-status';
 
@@ -42,31 +42,31 @@ export default function VoteDetailPage() {
   // SWRでデータ取得
   const { poll, isLoading, isError, error, mutate } = usePoll(pollId);
 
+  // ユーザーの投票履歴を取得
+  const {
+    hasVoted: userHasVoted,
+    optionIds: userVoteOptions,
+    mutate: mutateUserVotes,
+  } = useUserVotes(pollId);
+
   // リアルタイム機能
   const { isConnected } = useRealtimePoll(pollId);
 
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [hasVoted, setHasVoted] = useState(false);
-  const [userVoteOptions, setUserVoteOptions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     if (poll) {
-      // TODO: 実際のユーザー認証機能実装後に、ユーザーの投票履歴をチェック
-      // 現在は仮で設定
-      const hasUserVoted = false; // 実際のロジックに置き換え
-      setHasVoted(hasUserVoted);
-
-      if (hasUserVoted) {
-        setUserVoteOptions([]); // 実際のユーザー投票履歴を設定
+      // ユーザーが投票済みかチェック
+      if (userHasVoted) {
         setShowResults(true);
       } else {
         setShowResults(poll.status === 'closed');
       }
     }
-  }, [poll]);
+  }, [poll, userHasVoted]);
 
   const handleShare = () => {
     const url = window.location.href;
@@ -102,10 +102,9 @@ export default function VoteDetailPage() {
 
         // データを再取得してUI更新
         mutate();
+        mutateUserVotes();
 
-        // ユーザーの投票履歴を更新
-        setHasVoted(true);
-        setUserVoteOptions(selectedOptions);
+        // 結果を表示
         setShowResults(true);
         toast.success('投票が完了しました！');
       }
@@ -205,7 +204,7 @@ export default function VoteDetailPage() {
 
   // 期限チェック
   const isExpired = poll.expiresAt ? new Date() > new Date(poll.expiresAt) : false;
-  const canVote = poll.status === 'active' && !hasVoted && !isExpired;
+  const canVote = poll.status === 'active' && !userHasVoted && !isExpired;
 
   return (
     <AppLayout
@@ -246,7 +245,7 @@ export default function VoteDetailPage() {
                   <Badge variant={poll.status === 'active' ? 'default' : 'destructive'}>
                     {poll.status === 'active' ? '進行中' : '終了'}
                   </Badge>
-                  {hasVoted && (
+                  {userHasVoted && (
                     <Badge
                       variant="secondary"
                       className="bg-emerald-100 text-emerald-700 border-emerald-200"
@@ -377,7 +376,7 @@ export default function VoteDetailPage() {
             )}
 
             {/* 投票済み表示 */}
-            {hasVoted && !showResults && (
+            {userHasVoted && !showResults && (
               <Card className="mb-6">
                 <CardContent className="text-center py-8">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 bg-emerald-100 border border-emerald-200">
