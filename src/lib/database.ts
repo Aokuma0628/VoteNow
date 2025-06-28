@@ -4,9 +4,12 @@ import type { Poll, PollOption, Vote, User } from '@prisma/client';
 // User関連の操作
 export const userOperations = {
   // ユーザーを作成
-  async create(data: { name: string; avatar?: string }): Promise<User> {
+  async create(data: { name: string; avatar?: string | null }): Promise<User> {
     return prisma.user.create({
-      data,
+      data: {
+        name: data.name,
+        avatar: data.avatar ?? null,
+      },
     });
   },
 
@@ -20,6 +23,13 @@ export const userOperations = {
   // 全ユーザーを取得
   async findAll(): Promise<User[]> {
     return prisma.user.findMany();
+  },
+
+  // ユーザー名で検索
+  async findByName(name: string): Promise<User | null> {
+    return prisma.user.findFirst({
+      where: { name },
+    });
   },
 };
 

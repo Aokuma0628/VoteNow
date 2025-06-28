@@ -6,11 +6,13 @@ import {
   createValidationError,
   createMethodNotAllowedError,
   createServerError,
+  createAuthError,
   parseRequestBody,
   validateArray,
 } from '@/lib/api-utils';
 import type { CastVoteRequest } from '@/types/api';
 import { broadcastUpdate } from '@/lib/realtime';
+import { getSession } from '@/lib/session';
 
 // POST /api/polls/[id]/vote - 投票実行
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -54,9 +56,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return createValidationError('この投票では複数選択できません');
     }
 
-    // TODO: 実際のアプリでは認証されたユーザーIDを使用
-    // 今回は仮のユーザーIDを使用
-    const userId = 'temp-user-id';
+    // セッションからユーザー情報を取得
+    const session = await getSession();
+    if (!session.userId) {
+      return createAuthError('投票するにはログインが必要です');
+    }
+    const userId = session.userId;
 
     // 既存の投票確認
     const existingVotes = await voteOperations.findUserVoteForPoll(userId, pollId);
@@ -96,7 +101,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // レスポンス用データの変換
     const votesWithDetails = votes.map(vote => {
       const option = updatedPoll.options.find(opt => opt.id === vote.optionId);
-      const user = { id: userId, name: 'ゲストユーザー', avatar: null }; // TODO: 実際のユーザー情報
+      const user = {
+        id: userId,
+        name: session.userName || 'ユーザー',
+        avatar: session.userAvatar || null,
+      };
 
       return {
         id: vote.id,

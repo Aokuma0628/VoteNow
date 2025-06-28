@@ -1,10 +1,14 @@
 'use client';
 
-import { Moon, Plus, Sun, Vote } from 'lucide-react';
+import { useState } from 'react';
+import { LogIn, Moon, Plus, Sun, Vote } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/providers/theme-provider';
 import { RealtimeStatusDot } from '@/components/realtime-status';
+import { useAuth } from '@/lib/hooks/use-auth';
+import { LoginDialog } from '@/components/auth/login-dialog';
+import { UserMenu } from '@/components/auth/user-menu';
 
 interface HeaderProps {
   title?: string;
@@ -13,6 +17,8 @@ interface HeaderProps {
 
 export function Header({ title, actions }: HeaderProps) {
   const { resolvedTheme, toggleTheme } = useTheme();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   return (
     <header className="backdrop-blur-md border-b transition-all duration-300 bg-white/80 dark:bg-stone-900/80 border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-40">
@@ -39,6 +45,22 @@ export function Header({ title, actions }: HeaderProps) {
             {/* カスタムアクション */}
             {actions}
 
+            {/* ユーザーメニュー/ログインボタン */}
+            {!isLoading &&
+              (isAuthenticated ? (
+                <UserMenu />
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLoginDialog(true)}
+                  className="gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span className="hidden sm:inline">ログイン</span>
+                </Button>
+              ))}
+
             {/* モバイル投票作成ボタン */}
             <Button asChild variant="ghost" size="icon" className="md:hidden text-emerald-600">
               <a href="/create">
@@ -63,6 +85,9 @@ export function Header({ title, actions }: HeaderProps) {
           </div>
         </div>
       </div>
+
+      {/* ログインダイアログ */}
+      <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
     </header>
   );
 }
