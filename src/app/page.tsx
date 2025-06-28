@@ -8,13 +8,16 @@ import { StatsCard } from '@/components/stats-card';
 import { EmptyState } from '@/components/empty-state';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
-import { usePolls } from '@/lib/hooks/use-polls';
+import { usePolls, useAllUserVotes } from '@/lib/hooks/use-polls';
 import { useMemo } from 'react';
 import { useRealtime } from '@/lib/hooks/use-realtime';
 import { RealtimeStatus } from '@/components/realtime-status';
 
 export default function Home() {
   const { polls, total, isLoading, isError, error } = usePolls();
+
+  // ユーザーの投票履歴を取得
+  const { votesByPoll } = useAllUserVotes();
 
   // リアルタイム機能
   useRealtime();
@@ -156,7 +159,7 @@ export default function Home() {
                 <VoteCard
                   key={poll.id}
                   vote={poll}
-                  hasVoted={false} // TODO: 後でユーザーの投票状況を確認する機能を追加
+                  hasVoted={!!votesByPoll[poll.id]}
                   onShare={handleShare}
                 />
               ))}

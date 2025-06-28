@@ -101,3 +101,17 @@ export function useUserVotes(pollId: string | null | undefined) {
     mutate,
   };
 }
+
+// ユーザーのすべての投票履歴取得フック
+export function useAllUserVotes() {
+  const { data, error, isLoading, mutate } = useSWR('/api/user-votes', fetcher);
+
+  return {
+    votesByPoll: data?.data?.votesByPoll || {},
+    totalVotes: data?.data?.totalVotes || 0,
+    isLoading,
+    isError: !!error,
+    error,
+    mutate,
+  };
+}
