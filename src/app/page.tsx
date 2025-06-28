@@ -28,7 +28,10 @@ export default function Home() {
 
   // 統計情報を計算
   const stats = useMemo(() => {
-    const activePolls = polls.filter(poll => poll.status === 'active');
+    const activePolls = polls.filter(poll => {
+      const isExpired = poll.expiresAt ? new Date() > new Date(poll.expiresAt) : false;
+      return poll.status === 'active' && !isExpired;
+    });
     return {
       active: activePolls.length,
       total,

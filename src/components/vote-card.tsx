@@ -51,6 +51,14 @@ export function VoteCard({ vote, hasVoted = false, onShare }: VoteCardProps) {
 
   const categoryInfo = getCategoryInfo(vote.category);
 
+  // 期限チェック
+  const isExpired = vote.expiresAt ? new Date() > new Date(vote.expiresAt) : false;
+
+  const getActualStatus = () => {
+    if (isExpired) return 'closed';
+    return vote.status;
+  };
+
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'active':
@@ -77,8 +85,7 @@ export function VoteCard({ vote, hasVoted = false, onShare }: VoteCardProps) {
     }
   };
 
-  // 期限チェック
-  const isExpired = vote.expiresAt ? new Date() > new Date(vote.expiresAt) : false;
+  const actualStatus = getActualStatus();
 
   const handleShare = () => {
     if (onShare) {
@@ -107,7 +114,7 @@ export function VoteCard({ vote, hasVoted = false, onShare }: VoteCardProps) {
               {categoryInfo.name}
             </Badge>
           </div>
-          <Badge variant={getStatusBadgeVariant(vote.status)}>{getStatusText(vote.status)}</Badge>
+          <Badge variant={getStatusBadgeVariant(actualStatus)}>{getStatusText(actualStatus)}</Badge>
         </div>
 
         {/* タイトル・説明 */}
@@ -149,13 +156,14 @@ export function VoteCard({ vote, hasVoted = false, onShare }: VoteCardProps) {
             hour: '2-digit',
             minute: '2-digit',
           })}
-          {vote.status === 'active' && !isExpired && <span> • 投票中</span>}
-          {isExpired && <span> • 期限切れ</span>}
+          {actualStatus === 'active' && <span> • 投票中</span>}
+          {actualStatus === 'closed' && <span> • 終了</span>}
+          {actualStatus === 'draft' && <span> • 下書き</span>}
         </div>
 
         {/* アクションボタン */}
         <div className="flex gap-2">
-          {vote.status === 'active' && !hasVoted && !isExpired ? (
+          {actualStatus === 'active' && !hasVoted ? (
             <Button asChild className="flex-1">
               <a href={`/vote/${vote.id}`}>投票する</a>
             </Button>
