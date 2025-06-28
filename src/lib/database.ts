@@ -66,6 +66,7 @@ export const pollOperations = {
     allowMultiple?: boolean;
     allowAddOptions?: boolean;
     isPublic?: boolean;
+    status?: string;
     expiresAt?: Date;
     options: { text: string; description?: string }[];
   }): Promise<Poll & { options: PollOption[] }> {

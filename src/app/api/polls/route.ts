@@ -143,6 +143,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     allowMultiple: body.allowMultiple || false,
     allowAddOptions: body.allowAddOptions || false,
     isPublic: body.isPublic !== false, // デフォルトtrue
+    status: 'active', // 投票を即座にアクティブ状態に設定
     expiresAt,
     options: body.options,
   });
