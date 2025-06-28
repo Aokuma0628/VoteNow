@@ -25,20 +25,6 @@ powershell.exe -Command '[System.Media.SystemSounds]::Hand.Play()'
 - ビルドが成功したとき
 - その他、重要なタスクが完了したとき
 
-### Issue完了時の使用量確認
-
-**重要**: Issue の実装が完了した際は、必ず以下のコマンドを実行してClaude Codeの使用量を確認すること：
-
-```bash
-npx ccusage@latest
-```
-
-これにより、以下の情報を把握できます：
-
-- トークン使用量の確認
-- コスト状況の把握
-- Cache使用効率の確認
-- プロジェクト進行に伴うリソース消費の追跡
 
 ### 作業日誌の記録
 
