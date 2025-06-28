@@ -4,9 +4,6 @@ import { randomUUID } from 'crypto';
 
 export interface SessionData {
   sessionId: string;
-  userId?: string;
-  userName?: string;
-  userAvatar?: string | null;
 }
 
 export const sessionOptions: SessionOptions = {

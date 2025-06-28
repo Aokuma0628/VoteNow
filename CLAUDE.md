@@ -19,6 +19,8 @@
 <type> #<issue-number>: <description>
 ```
 
+**重要**: コミットメッセージは必ず1行に収めること
+
 **Type**: feat, fix, docs, style, refactor, test, chore
 
 **例**:

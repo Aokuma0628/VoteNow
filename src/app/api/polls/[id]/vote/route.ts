@@ -11,7 +11,7 @@ import {
 } from '@/lib/api-utils';
 import type { CastVoteRequest } from '@/types/api';
 import { broadcastUpdate } from '@/lib/realtime';
-import { getSession, getOrCreateSessionId } from '@/lib/session';
+import { getOrCreateSessionId } from '@/lib/session';
 
 // POST /api/polls/[id]/vote - 投票実行
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -56,11 +56,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     }
 
     // セッションIDをユーザー識別子として使用（ログイン不要）
-    const sessionId = await getOrCreateSessionId();
-    const session = await getSession();
-
-    // ログイン済みの場合はユーザーIDを、未ログインの場合はセッションIDを使用
-    const userId = session.userId || sessionId;
+    const userId = await getOrCreateSessionId();
 
     // 既存の投票確認
     const existingVotes = await voteOperations.findUserVoteForPoll(userId, pollId);
@@ -102,8 +98,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       const option = updatedPoll.options.find(opt => opt.id === vote.optionId);
       const user = {
         id: userId,
-        name: session.userName || (session.userId ? 'ユーザー' : 'ゲスト'),
-        avatar: session.userAvatar || null,
+        name: 'ゲスト',
+        avatar: null,
       };
 
       return {
