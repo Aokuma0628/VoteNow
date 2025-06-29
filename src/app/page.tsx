@@ -8,11 +8,19 @@ import { StatsCard } from '@/components/stats-card';
 import { EmptyState } from '@/components/empty-state';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
-import { usePolls } from '@/lib/hooks/use-polls';
+import { usePolls, useAllUserVotes } from '@/lib/hooks/use-polls';
 import { useMemo } from 'react';
+import { useRealtime } from '@/lib/hooks/use-realtime';
+import { RealtimeStatus } from '@/components/realtime-status';
 
 export default function Home() {
   const { polls, total, isLoading, isError, error } = usePolls();
+
+  // ユーザーの投票履歴を取得
+  const { votesByPoll } = useAllUserVotes();
+
+  // リアルタイム機能
+  useRealtime();
 
   // 新しい順でソート（APIからのデータは既にソート済みですが、念のため）
   const sortedPolls = useMemo(
@@ -23,7 +31,10 @@ export default function Home() {
 
   // 統計情報を計算
   const stats = useMemo(() => {
-    const activePolls = polls.filter(poll => poll.status === 'active');
+    const activePolls = polls.filter(poll => {
+      const isExpired = poll.expiresAt ? new Date() > new Date(poll.expiresAt) : false;
+      return poll.status === 'active' && !isExpired;
+    });
     return {
       active: activePolls.length,
       total,
@@ -110,6 +121,19 @@ export default function Home() {
               iconColor="text-blue-600"
               iconBgColor="bg-blue-100 border-blue-200"
             />
+
+            {/* リアルタイム状態 */}
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4 text-stone-900 dark:text-stone-100">
+                  リアルタイム更新
+                </h3>
+                <RealtimeStatus showReconnectButton={false} />
+                <p className="text-sm text-stone-600 dark:text-stone-400 mt-2">
+                  新しい投票や投票結果の変更がリアルタイムで反映されます
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
@@ -135,7 +159,7 @@ export default function Home() {
                 <VoteCard
                   key={poll.id}
                   vote={poll}
-                  hasVoted={false} // TODO: 後でユーザーの投票状況を確認する機能を追加
+                  hasVoted={!!votesByPoll[poll.id]}
                   onShare={handleShare}
                 />
               ))}

@@ -44,6 +44,11 @@ export function createAuthError(message?: string): NextResponse<ApiError> {
   return createErrorResponse('AUTHENTICATION_ERROR', message || '認証が必要です', 401);
 }
 
+// 未認証エラー（エイリアス）
+export function createUnauthorizedError(message?: string): NextResponse<ApiError> {
+  return createAuthError(message);
+}
+
 // 認可エラー
 export function createAuthorizationError(message?: string): NextResponse<ApiError> {
   return createErrorResponse(

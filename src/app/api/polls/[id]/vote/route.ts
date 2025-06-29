@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { pollOperations, voteOperations } from '@/lib/database';
+import { pollOperations, voteOperations, userOperations } from '@/lib/database';
 import {
   createSuccessResponse,
   createNotFoundError,
@@ -10,6 +10,8 @@ import {
   validateArray,
 } from '@/lib/api-utils';
 import type { CastVoteRequest } from '@/types/api';
+import { broadcastUpdate } from '@/lib/realtime';
+import { getOrCreateSessionId } from '@/lib/session';
 
 // POST /api/polls/[id]/vote - 投票実行
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -53,9 +55,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return createValidationError('この投票では複数選択できません');
     }
 
-    // TODO: 実際のアプリでは認証されたユーザーIDを使用
-    // 今回は仮のユーザーIDを使用
-    const userId = 'temp-user-id';
+    // セッションIDを取得し、ゲストユーザーを作成または取得
+    const sessionId = await getOrCreateSessionId();
+    const user = await userOperations.findOrCreateGuest(sessionId);
+    const userId = user.id;
 
     // 既存の投票確認
     const existingVotes = await voteOperations.findUserVoteForPoll(userId, pollId);
@@ -95,7 +98,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // レスポンス用データの変換
     const votesWithDetails = votes.map(vote => {
       const option = updatedPoll.options.find(opt => opt.id === vote.optionId);
-      const user = { id: userId, name: 'ゲストユーザー', avatar: null }; // TODO: 実際のユーザー情報
+      const user = {
+        id: userId,
+        name: 'ゲスト',
+        avatar: null,
+      };
 
       return {
         id: vote.id,
@@ -171,6 +178,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         votes: updatedPoll.votes.length,
       },
     };
+
+    // リアルタイム通知を送信
+    broadcastUpdate({
+      type: 'vote_cast',
+      pollId: pollId,
+      data: {
+        votes: votesWithDetails,
+        poll: pollWithDetails,
+      },
+    });
 
     return createSuccessResponse(
       {

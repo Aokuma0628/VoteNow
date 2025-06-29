@@ -4,9 +4,12 @@ import type { Poll, PollOption, Vote, User } from '@prisma/client';
 // User関連の操作
 export const userOperations = {
   // ユーザーを作成
-  async create(data: { name: string; avatar?: string }): Promise<User> {
+  async create(data: { name: string; avatar?: string | null }): Promise<User> {
     return prisma.user.create({
-      data,
+      data: {
+        name: data.name,
+        avatar: data.avatar ?? null,
+      },
     });
   },
 
@@ -21,6 +24,35 @@ export const userOperations = {
   async findAll(): Promise<User[]> {
     return prisma.user.findMany();
   },
+
+  // ユーザー名で検索
+  async findByName(name: string): Promise<User | null> {
+    return prisma.user.findFirst({
+      where: { name },
+    });
+  },
+
+  // ゲストユーザーを取得または作成
+  async findOrCreateGuest(sessionId: string): Promise<User> {
+    // sessionIdでユーザーを検索（カスタムフィールドが必要な場合は別途追加）
+    // まず既存の実装を維持するためにsessionIdをnameの一部として保存
+    const guestName = `ゲスト_${sessionId}`;
+
+    const existingUser = await prisma.user.findFirst({
+      where: { name: guestName },
+    });
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    return prisma.user.create({
+      data: {
+        name: guestName,
+        avatar: null,
+      },
+    });
+  },
 };
 
 // Poll関連の操作
@@ -34,6 +66,7 @@ export const pollOperations = {
     allowMultiple?: boolean;
     allowAddOptions?: boolean;
     isPublic?: boolean;
+    status?: string;
     expiresAt?: Date;
     options: { text: string; description?: string }[];
   }): Promise<Poll & { options: PollOption[] }> {
@@ -146,7 +179,7 @@ export const voteOperations = {
   },
 
   // 特定の投票に対するユーザーの投票を取得
-  async findUserVoteForPoll(userId: string, pollId: string): Promise<Vote[]> {
+  async findUserVoteForPoll(userId: string, pollId: string) {
     return prisma.vote.findMany({
       where: {
         userId,

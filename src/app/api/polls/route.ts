@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { pollOperations } from '@/lib/database';
+import { pollOperations, userOperations } from '@/lib/database';
 import {
   createSuccessResponse,
   createMethodNotAllowedError,
@@ -11,6 +11,8 @@ import {
   parseRequestBody,
 } from '@/lib/api-utils';
 import type { PollsListResponse, CreatePollRequest } from '@/types/api';
+import { broadcastUpdate } from '@/lib/realtime';
+import { getOrCreateSessionId } from '@/lib/session';
 
 // GET /api/polls - 投票一覧取得
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -111,8 +113,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
   });
 
-  // 期限の検証
-  let expiresAt: Date | undefined;
+  // 期限の検証と自動設定
+  let expiresAt: Date;
   if (body.expiresAt) {
     expiresAt = new Date(body.expiresAt);
     if (isNaN(expiresAt.getTime())) {
@@ -121,11 +123,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     if (expiresAt <= new Date()) {
       throw new Error('期限は現在時刻より後である必要があります');
     }
+  } else {
+    // 期限が未設定の場合は1週間後に自動設定
+    expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
   }
 
-  // TODO: 実際のアプリでは認証されたユーザーIDを使用
-  // 今回は仮のユーザーIDを使用
-  const createdBy = 'temp-user-id';
+  // セッションIDを取得し、ゲストユーザーを作成または取得
+  const sessionId = await getOrCreateSessionId();
+  const user = await userOperations.findOrCreateGuest(sessionId);
+  const createdBy = user.id;
 
   // 投票を作成
   const poll = await pollOperations.create({
@@ -136,6 +143,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     allowMultiple: body.allowMultiple || false,
     allowAddOptions: body.allowAddOptions || false,
     isPublic: body.isPublic !== false, // デフォルトtrue
+    status: 'active', // 投票を即座にアクティブ状態に設定
     expiresAt,
     options: body.options,
   });
@@ -176,6 +184,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       votes: createdPoll.votes.length,
     },
   };
+
+  // リアルタイム通知を送信
+  broadcastUpdate({
+    type: 'poll_created',
+    pollId: pollWithStats.id,
+    data: pollWithStats,
+  });
 
   return createSuccessResponse(pollWithStats, '投票が作成されました', 201);
 });
