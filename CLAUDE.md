@@ -82,8 +82,8 @@ npm run ci:check
 #### 新しいIssue実装時の手順
 ```bash
 # 新Issue開始時は必ず実行
-git checkout main
-git pull origin main
+git checkout develop
+git pull origin develop
 git checkout -b feature/#<issue-number>_<description>
 git push -u origin feature/#<issue-number>_<description>
 ```
