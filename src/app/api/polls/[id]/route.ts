@@ -93,8 +93,29 @@ export async function PUT() {
   return createMethodNotAllowedError(['GET']);
 }
 
-export async function DELETE() {
-  return createMethodNotAllowedError(['GET']);
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+
+    if (typeof id !== 'string') {
+      return createNotFoundError('投票');
+    }
+
+    // 投票の存在確認
+    const poll = await pollOperations.findById(id);
+
+    if (!poll) {
+      return createNotFoundError('投票');
+    }
+
+    // 投票を削除（関連するデータも連鎖削除される）
+    await pollOperations.delete(id);
+
+    return createSuccessResponse({ success: true });
+  } catch (error) {
+    console.error('DELETE /api/polls/[id] Error:', error);
+    return createServerError();
+  }
 }
 
 export async function PATCH() {

@@ -1,19 +1,30 @@
 'use client';
 
-import { CheckCircle, List, Share2, Users } from 'lucide-react';
+import { CheckCircle, List, Share2, Trash2, Users } from 'lucide-react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { PollWithStats } from '@/types/api';
+import { DeletePollDialog } from './delete-poll-dialog';
 
 interface VoteCardProps {
   vote: PollWithStats;
   hasVoted?: boolean;
   onShare?: (voteId: string) => void;
+  onDelete?: (voteId: string) => void;
+  canDelete?: boolean;
 }
 
-export function VoteCard({ vote, hasVoted = false, onShare }: VoteCardProps) {
+export function VoteCard({
+  vote,
+  hasVoted = false,
+  onShare,
+  onDelete,
+  canDelete = false,
+}: VoteCardProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   // カテゴリー情報をマッピング
   const getCategoryInfo = (category: string) => {
     const categoryMap: Record<
@@ -100,83 +111,112 @@ export function VoteCard({ vote, hasVoted = false, onShare }: VoteCardProps) {
     }
   };
 
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(vote.id);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   return (
-    <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-      <CardContent className="p-6">
-        {/* ヘッダー */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className={cn('gap-1', categoryInfo.color.light, 'dark:' + categoryInfo.color.dark)}
-            >
-              <span>{categoryInfo.emoji}</span>
-              {categoryInfo.name}
+    <>
+      <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+        <CardContent className="p-6">
+          {/* ヘッダー */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="secondary"
+                className={cn('gap-1', categoryInfo.color.light, 'dark:' + categoryInfo.color.dark)}
+              >
+                <span>{categoryInfo.emoji}</span>
+                {categoryInfo.name}
+              </Badge>
+            </div>
+            <Badge variant={getStatusBadgeVariant(actualStatus)}>
+              {getStatusText(actualStatus)}
             </Badge>
           </div>
-          <Badge variant={getStatusBadgeVariant(actualStatus)}>{getStatusText(actualStatus)}</Badge>
-        </div>
 
-        {/* タイトル・説明 */}
-        <h3 className="text-lg font-semibold mb-2 text-stone-800 dark:text-stone-200 line-clamp-2">
-          {vote.title}
-        </h3>
-        {vote.description && (
-          <p className="text-sm text-stone-600 dark:text-stone-400 mb-4 line-clamp-2">
-            {vote.description}
-          </p>
-        )}
+          {/* タイトル・説明 */}
+          <h3 className="text-lg font-semibold mb-2 text-stone-800 dark:text-stone-200 line-clamp-2">
+            {vote.title}
+          </h3>
+          {vote.description && (
+            <p className="text-sm text-stone-600 dark:text-stone-400 mb-4 line-clamp-2">
+              {vote.description}
+            </p>
+          )}
 
-        {/* 統計情報 */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1 text-stone-500 dark:text-stone-400">
-              <Users className="h-4 w-4" />
-              {vote.totalVotes}票
-            </span>
-            <span className="flex items-center gap-1 text-stone-500 dark:text-stone-400">
-              <List className="h-4 w-4" />
-              {vote.options.length}選択肢
-            </span>
+          {/* 統計情報 */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4 text-sm">
+              <span className="flex items-center gap-1 text-stone-500 dark:text-stone-400">
+                <Users className="h-4 w-4" />
+                {vote.totalVotes}票
+              </span>
+              <span className="flex items-center gap-1 text-stone-500 dark:text-stone-400">
+                <List className="h-4 w-4" />
+                {vote.options.length}選択肢
+              </span>
+            </div>
+            {hasVoted && (
+              <span className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
+                <CheckCircle className="h-4 w-4" />
+                投票済み
+              </span>
+            )}
           </div>
-          {hasVoted && (
-            <span className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
-              <CheckCircle className="h-4 w-4" />
-              投票済み
-            </span>
-          )}
-        </div>
 
-        {/* 時間情報 */}
-        <div className="text-xs text-stone-400 dark:text-stone-500 mb-4">
-          作成:{' '}
-          {new Date(vote.createdAt).toLocaleDateString('ja-JP', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-          {actualStatus === 'active' && <span> • 投票中</span>}
-          {actualStatus === 'closed' && <span> • 終了</span>}
-          {actualStatus === 'draft' && <span> • 下書き</span>}
-        </div>
+          {/* 時間情報 */}
+          <div className="text-xs text-stone-400 dark:text-stone-500 mb-4">
+            作成:{' '}
+            {new Date(vote.createdAt).toLocaleDateString('ja-JP', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+            {actualStatus === 'active' && <span> • 投票中</span>}
+            {actualStatus === 'closed' && <span> • 終了</span>}
+            {actualStatus === 'draft' && <span> • 下書き</span>}
+          </div>
 
-        {/* アクションボタン */}
-        <div className="flex gap-2">
-          {actualStatus === 'active' && !hasVoted ? (
-            <Button asChild className="flex-1">
-              <a href={`/vote/${vote.id}`}>投票する</a>
+          {/* アクションボタン */}
+          <div className="flex gap-2">
+            {actualStatus === 'active' && !hasVoted ? (
+              <Button asChild className="flex-1">
+                <a href={`/vote/${vote.id}`}>投票する</a>
+              </Button>
+            ) : (
+              <Button variant="secondary" asChild className="flex-1">
+                <a href={`/vote/${vote.id}`}>結果を見る</a>
+              </Button>
+            )}
+            <Button variant="outline" size="icon" onClick={handleShare} title="共有">
+              <Share2 className="h-4 w-4" />
             </Button>
-          ) : (
-            <Button variant="secondary" asChild className="flex-1">
-              <a href={`/vote/${vote.id}`}>結果を見る</a>
-            </Button>
-          )}
-          <Button variant="outline" size="icon" onClick={handleShare} title="共有">
-            <Share2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            {canDelete && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setDeleteDialogOpen(true)}
+                title="削除"
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <DeletePollDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        pollTitle={vote.title}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }

@@ -9,12 +9,14 @@ import { EmptyState } from '@/components/empty-state';
 import { AppLayout } from '@/components/layout/app-layout';
 import { toast } from 'sonner';
 import { usePolls, useAllUserVotes } from '@/lib/hooks/use-polls';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useRealtime } from '@/lib/hooks/use-realtime';
 import { RealtimeStatus } from '@/components/realtime-status';
+import { useSWRConfig } from 'swr';
 
 export default function Home() {
   const { polls, total, isLoading, isError, error } = usePolls();
+  const { mutate } = useSWRConfig();
 
   // ユーザーの投票履歴を取得
   const { votesByPoll } = useAllUserVotes();
@@ -69,6 +71,31 @@ export default function Home() {
       }
     }
   };
+
+  // 投票の削除機能
+  const handleDelete = useCallback(
+    async (pollId: string) => {
+      try {
+        const response = await fetch(`/api/polls/${pollId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || '削除に失敗しました');
+        }
+
+        // SWRのキャッシュを更新
+        await mutate('/api/polls');
+
+        toast.success('投票を削除しました');
+      } catch (error) {
+        console.error('削除エラー:', error);
+        toast.error(error instanceof Error ? error.message : '削除に失敗しました');
+      }
+    },
+    [mutate],
+  );
 
   // エラー表示
   if (isError) {
@@ -161,6 +188,8 @@ export default function Home() {
                   vote={poll}
                   hasVoted={!!votesByPoll[poll.id]}
                   onShare={handleShare}
+                  onDelete={handleDelete}
+                  canDelete={true}
                 />
               ))}
             </div>

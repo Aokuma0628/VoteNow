@@ -71,6 +71,36 @@ npm run ci:check
 
 **必須**: 日本語で回答すること
 
+### 6. プルリクエスト作成ルール
+
+**必須**: 機能実装完了後のPR作成手順
+
+#### PRタイトルフォーマット
+```
+feat #<issue-number>: <description>
+```
+
+#### PR本文テンプレート
+```markdown
+## 概要
+<実装内容の簡潔な説明>
+
+## 実装内容
+- <主要な変更点1>
+- <主要な変更点2>
+- <主要な変更点3>
+
+## テスト方法
+- [ ] ローカル環境での動作確認
+- [ ] コード品質チェック（npm run ci:check）通過
+
+## スクリーンショット
+<必要に応じてUIの変更点を添付>
+
+## 関連Issue
+closes #<issue-number>
+```
+
 ---
 
 ## 🟡 重要ルール（原則厳守）🟡
@@ -82,8 +112,8 @@ npm run ci:check
 #### 新しいIssue実装時の手順
 ```bash
 # 新Issue開始時は必ず実行
-git checkout main
-git pull origin main
+git checkout develop
+git pull origin develop
 git checkout -b feature/#<issue-number>_<description>
 git push -u origin feature/#<issue-number>_<description>
 ```
