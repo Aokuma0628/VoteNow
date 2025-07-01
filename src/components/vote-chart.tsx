@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { PollWithDetails } from '@/types/api';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 interface VoteChartProps {
   vote: PollWithDetails;
@@ -45,6 +45,54 @@ export function VoteChart({ vote, className }: VoteChartProps) {
       color: COLORS[index % COLORS.length],
     }));
   }, [vote.options, vote.totalVotes]);
+
+  // アニメーション用のデータ
+  const [animatedData, setAnimatedData] = useState<typeof chartData>([]);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // データ変更時のアニメーション
+  useEffect(() => {
+    // 初回マウント時
+    if (animatedData.length === 0) {
+      setAnimatedData(chartData);
+      return;
+    }
+
+    // データ更新時
+    setIsAnimating(true);
+    const startData = [...animatedData];
+    const duration = 700;
+    const startTime = Date.now();
+
+    const animate = () => {
+      const now = Date.now();
+      const progress = Math.min((now - startTime) / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      const newData = chartData.map(target => {
+        const start = startData.find(d => d.fullName === target.fullName) || { votes: 0 };
+        const currentVotes = Math.round(start.votes + (target.votes - start.votes) * easeOut);
+        const currentPercentage =
+          vote.totalVotes > 0 ? ((currentVotes / vote.totalVotes) * 100).toFixed(1) : '0.0';
+
+        return {
+          ...target,
+          votes: currentVotes,
+          percentage: currentPercentage,
+        };
+      });
+
+      setAnimatedData(newData);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setIsAnimating(false);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [chartData, vote.totalVotes, animatedData]);
 
   // カスタムツールチップ
   const CustomTooltip = ({
@@ -81,7 +129,7 @@ export function VoteChart({ vote, className }: VoteChartProps) {
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={chartData}
+              data={animatedData}
               margin={{
                 top: 20,
                 right: 30,
@@ -109,8 +157,14 @@ export function VoteChart({ vote, className }: VoteChartProps) {
                 tick={{ fontSize: 12 }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="votes" radius={[4, 4, 0, 0]}>
-                {chartData.map((entry, index) => (
+              <Bar
+                dataKey="votes"
+                radius={[4, 4, 0, 0]}
+                animationBegin={0}
+                animationDuration={700}
+                animationEasing="ease-out"
+              >
+                {animatedData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Bar>
@@ -120,28 +174,36 @@ export function VoteChart({ vote, className }: VoteChartProps) {
 
         {/* 詳細統計 */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {chartData.map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-800 rounded-lg"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-4 h-4 rounded-sm flex-shrink-0"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">
-                  {item.fullName}
-                </span>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                  {item.votes}票
+          {animatedData.map((item, index) => {
+            const originalItem = chartData.find(d => d.fullName === item.fullName);
+            const hasChanged = originalItem && originalItem.votes !== item.votes;
+            return (
+              <div
+                key={index}
+                className={`flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-800 rounded-lg transition-all duration-300 ${
+                  hasChanged && isAnimating ? 'ring-2 ring-blue-400 ring-opacity-50' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-4 h-4 rounded-sm flex-shrink-0"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">
+                    {item.fullName}
+                  </span>
                 </div>
-                <div className="text-xs text-stone-600 dark:text-stone-400">{item.percentage}%</div>
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+                    {item.votes}票
+                  </div>
+                  <div className="text-xs text-stone-600 dark:text-stone-400">
+                    {item.percentage}%
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* 投票なしの場合 */}

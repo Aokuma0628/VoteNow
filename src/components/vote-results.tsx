@@ -3,7 +3,7 @@
 import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import type { PollOptionWithVotes } from '@/types/api';
 
 interface VoteResultsProps {
@@ -25,6 +25,44 @@ function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: Resu
   const optionVotes = option._count.votes;
   const percentage = totalVotes > 0 ? ((optionVotes / totalVotes) * 100).toFixed(1) : '0.0';
 
+  // アニメーション用の状態管理
+  const [displayVotes, setDisplayVotes] = useState(optionVotes);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const prevVotesRef = useRef(optionVotes);
+
+  // 投票数が変化した時のアニメーション
+  useEffect(() => {
+    if (prevVotesRef.current !== optionVotes) {
+      setIsAnimating(true);
+
+      // 数値のアニメーション
+      const startValue = prevVotesRef.current;
+      const endValue = optionVotes;
+      const duration = 700; // 700ms
+      const startTime = Date.now();
+
+      const animate = () => {
+        const now = Date.now();
+        const progress = Math.min((now - startTime) / duration, 1);
+
+        // イージング関数（ease-out）
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentValue = Math.round(startValue + (endValue - startValue) * easeOut);
+
+        setDisplayVotes(currentValue);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setIsAnimating(false);
+          prevVotesRef.current = optionVotes;
+        }
+      };
+
+      requestAnimationFrame(animate);
+    }
+  }, [optionVotes]);
+
   // 順位に応じた色を決定
   const getBarColorClass = () => {
     if (isWinner) return 'bg-gradient-to-r from-green-500 to-green-600';
@@ -34,7 +72,12 @@ function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: Resu
   };
 
   return (
-    <div className="p-4 border border-stone-200 dark:border-stone-700 rounded-lg">
+    <div
+      className={cn(
+        'p-4 border border-stone-200 dark:border-stone-700 rounded-lg transition-all duration-300',
+        isAnimating && 'ring-2 ring-blue-400 ring-opacity-50 shadow-lg',
+      )}
+    >
       <div className="flex justify-between items-center mb-2">
         <span className="font-medium text-stone-800 dark:text-stone-200">
           {option.text}
@@ -43,18 +86,29 @@ function ResultBar({ option, totalVotes, isWinner, isUserSelection, rank }: Resu
           )}
         </span>
         <div className="text-right">
-          <span className="font-semibold text-stone-800 dark:text-stone-200">{optionVotes}票</span>
+          <span
+            className={cn(
+              'font-semibold text-stone-800 dark:text-stone-200 transition-all duration-300',
+              isAnimating && 'text-lg scale-110 text-blue-600 dark:text-blue-400',
+            )}
+          >
+            {displayVotes}票
+          </span>
           <span className="text-sm text-stone-500 dark:text-stone-400 ml-1">({percentage}%)</span>
         </div>
       </div>
-      <div className="w-full bg-stone-100 dark:bg-stone-700 rounded-full h-2 overflow-hidden">
+      <div className="w-full bg-stone-100 dark:bg-stone-700 rounded-full h-2 overflow-hidden relative">
         <div
           className={cn(
             'h-2 rounded-full transition-all duration-700 ease-out',
             getBarColorClass(),
+            isAnimating && 'animate-pulse',
           )}
           style={{ width: `${percentage}%` }}
         />
+        {isAnimating && (
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-shimmer" />
+        )}
       </div>
       {option.description && (
         <p className="text-sm text-stone-600 dark:text-stone-400 mt-2">{option.description}</p>
@@ -90,6 +144,7 @@ export function VoteResults({
   const maxVotes = Math.max(...options.map(opt => opt._count.votes));
 
   // Recharts用のチャートデータを準備
+  const [animatedChartData, setAnimatedChartData] = useState<typeof chartData>([]);
   const chartData = useMemo(() => {
     return sortedOptions.map((option, index) => ({
       name: option.text,
@@ -98,6 +153,50 @@ export function VoteResults({
       percentage: totalVotes > 0 ? ((option._count.votes / totalVotes) * 100).toFixed(1) : '0.0',
     }));
   }, [sortedOptions, totalVotes]);
+
+  // グラフデータのアニメーション
+  useEffect(() => {
+    // 初回マウント時はアニメーションなし
+    if (animatedChartData.length === 0) {
+      setAnimatedChartData(chartData);
+      return;
+    }
+
+    // データ変更時はアニメーション付きで更新
+    const startData = [...animatedChartData];
+    const duration = 700;
+    const startTime = Date.now();
+
+    const animate = () => {
+      const now = Date.now();
+      const progress = Math.min((now - startTime) / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      const newData = chartData.map(target => {
+        const start = startData.find(d => d.name === target.name) || {
+          value: 0,
+          percentage: '0.0',
+        };
+        const currentValue = Math.round(start.value + (target.value - start.value) * easeOut);
+        const currentPercentage =
+          totalVotes > 0 ? ((currentValue / totalVotes) * 100).toFixed(1) : '0.0';
+
+        return {
+          ...target,
+          value: currentValue,
+          percentage: currentPercentage,
+        };
+      });
+
+      setAnimatedChartData(newData);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [chartData, totalVotes, animatedChartData]);
 
   // カスタムツールチップ
   const CustomTooltip = ({
@@ -130,15 +229,18 @@ export function VoteResults({
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={chartData}
+                  data={animatedChartData}
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
                   label={({ percentage }) => `${percentage}%`}
                   labelLine={false}
+                  animationBegin={0}
+                  animationDuration={700}
+                  animationEasing="ease-out"
                 >
-                  {chartData.map((entry, index) => (
+                  {animatedChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>

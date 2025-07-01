@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -11,6 +11,7 @@ import {
   RefreshCw,
   HelpCircle,
   Loader2,
+  Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ import { toast } from 'sonner';
 import { usePoll, castVote, useUserVotes } from '@/lib/hooks/use-polls';
 import { useRealtimePoll } from '@/lib/hooks/use-realtime';
 import { RealtimeStatus } from '@/components/realtime-status';
+import { VoteSuccessNotification } from '@/components/vote-success-notification';
 
 export default function VoteDetailPage() {
   const params = useParams();
@@ -56,6 +58,42 @@ export default function VoteDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+
+  // 参加者数のアニメーション用
+  const [displayParticipants, setDisplayParticipants] = useState(poll?.totalVotes || 0);
+  const [isParticipantsAnimating, setIsParticipantsAnimating] = useState(false);
+  const prevParticipantsRef = useRef(poll?.totalVotes || 0);
+
+  // 参加者数が変化した時のアニメーション
+  useEffect(() => {
+    if (poll && prevParticipantsRef.current !== poll.totalVotes) {
+      setIsParticipantsAnimating(true);
+
+      const startValue = prevParticipantsRef.current;
+      const endValue = poll.totalVotes;
+      const duration = 500;
+      const startTime = Date.now();
+
+      const animate = () => {
+        const now = Date.now();
+        const progress = Math.min((now - startTime) / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentValue = Math.round(startValue + (endValue - startValue) * easeOut);
+
+        setDisplayParticipants(currentValue);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setIsParticipantsAnimating(false);
+          prevParticipantsRef.current = poll.totalVotes;
+        }
+      };
+
+      requestAnimationFrame(animate);
+    }
+  }, [poll]);
 
   useEffect(() => {
     if (poll) {
@@ -106,7 +144,7 @@ export default function VoteDetailPage() {
 
         // 結果を表示
         setShowResults(true);
-        toast.success('投票が完了しました！');
+        setShowSuccessNotification(true);
       }
     } catch (error) {
       console.error('投票の送信に失敗しました:', error);
@@ -264,20 +302,43 @@ export default function VoteDetailPage() {
               </div>
             </div>
 
-            {poll.status === 'active' && !isExpired && poll.expiresAt && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                  <Clock className="h-4 w-4" />
-                  <span className="font-medium">
-                    期限: {new Date(poll.expiresAt).toLocaleDateString('ja-JP')}{' '}
-                    {new Date(poll.expiresAt).toLocaleTimeString('ja-JP', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+            {/* 参加者数表示 */}
+            <div className="mt-4 flex items-center gap-2 text-stone-600 dark:text-stone-400">
+              <Users
+                className={cn(
+                  'h-5 w-5',
+                  isParticipantsAnimating && 'animate-vote-pulse text-blue-600 dark:text-blue-400',
+                )}
+              />
+              <span
+                className={cn(
+                  'font-medium transition-all duration-300',
+                  isParticipantsAnimating && 'text-lg text-blue-600 dark:text-blue-400',
+                )}
+              >
+                {displayParticipants}人が参加
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {poll.status === 'active' && !isExpired && poll.expiresAt && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                    <Clock className="h-4 w-4" />
+                    <span className="font-medium">
+                      期限: {new Date(poll.expiresAt).toLocaleDateString('ja-JP')}{' '}
+                      {new Date(poll.expiresAt).toLocaleTimeString('ja-JP', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
                 </div>
+              )}
+              <div className="bg-stone-50 dark:bg-stone-900/20 border border-stone-200 dark:border-stone-800 rounded-lg p-4 flex items-center justify-center">
+                <RealtimeStatus />
               </div>
-            )}
+            </div>
           </CardHeader>
         </Card>
 
@@ -561,6 +622,12 @@ export default function VoteDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 投票成功通知 */}
+      <VoteSuccessNotification
+        show={showSuccessNotification}
+        onComplete={() => setShowSuccessNotification(false)}
+      />
     </AppLayout>
   );
 }

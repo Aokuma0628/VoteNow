@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckCircle, List, Share2, Trash2, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,6 +25,42 @@ export function VoteCard({
   canDelete = false,
 }: VoteCardProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [displayVotes, setDisplayVotes] = useState(vote.totalVotes);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const prevVotesRef = useRef(vote.totalVotes);
+
+  // 投票数が変化した時のアニメーション
+  useEffect(() => {
+    if (prevVotesRef.current !== vote.totalVotes) {
+      setIsAnimating(true);
+
+      // 数値のアニメーション
+      const startValue = prevVotesRef.current;
+      const endValue = vote.totalVotes;
+      const duration = 500; // 500ms
+      const startTime = Date.now();
+
+      const animate = () => {
+        const now = Date.now();
+        const progress = Math.min((now - startTime) / duration, 1);
+
+        // イージング関数（ease-out）
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentValue = Math.round(startValue + (endValue - startValue) * easeOut);
+
+        setDisplayVotes(currentValue);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setIsAnimating(false);
+          prevVotesRef.current = vote.totalVotes;
+        }
+      };
+
+      requestAnimationFrame(animate);
+    }
+  }, [vote.totalVotes]);
   // カテゴリー情報をマッピング
   const getCategoryInfo = (category: string) => {
     const categoryMap: Record<
@@ -120,7 +156,12 @@ export function VoteCard({
 
   return (
     <>
-      <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+      <Card
+        className={cn(
+          'h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1',
+          isAnimating && 'ring-2 ring-blue-400 ring-opacity-50 shadow-lg',
+        )}
+      >
         <CardContent className="p-6">
           {/* ヘッダー */}
           <div className="flex items-start justify-between mb-4">
@@ -151,9 +192,14 @@ export function VoteCard({
           {/* 統計情報 */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4 text-sm">
-              <span className="flex items-center gap-1 text-stone-500 dark:text-stone-400">
-                <Users className="h-4 w-4" />
-                {vote.totalVotes}票
+              <span
+                className={cn(
+                  'flex items-center gap-1 text-stone-500 dark:text-stone-400 transition-all duration-300',
+                  isAnimating && 'text-blue-600 dark:text-blue-400 font-semibold',
+                )}
+              >
+                <Users className={cn('h-4 w-4', isAnimating && 'animate-vote-pulse')} />
+                {displayVotes}票
               </span>
               <span className="flex items-center gap-1 text-stone-500 dark:text-stone-400">
                 <List className="h-4 w-4" />
