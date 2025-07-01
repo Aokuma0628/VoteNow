@@ -58,6 +58,21 @@ export function VoteChart({ vote, className }: VoteChartProps) {
       return;
     }
 
+    // アニメーション中は新しいアニメーションを開始しない
+    if (isAnimating) {
+      return;
+    }
+    
+    // データに変更がない場合はアニメーションしない
+    const hasDataChanged = chartData.some((item, index) => {
+      const animatedItem = animatedData[index];
+      return !animatedItem || animatedItem.votes !== item.votes;
+    });
+    
+    if (!hasDataChanged) {
+      return;
+    }
+
     // データ更新時
     setIsAnimating(true);
     const startData = [...animatedData];
@@ -92,7 +107,7 @@ export function VoteChart({ vote, className }: VoteChartProps) {
     };
 
     requestAnimationFrame(animate);
-  }, [chartData, vote.totalVotes, animatedData]);
+  }, [chartData, vote.totalVotes]);
 
   // カスタムツールチップ
   const CustomTooltip = ({

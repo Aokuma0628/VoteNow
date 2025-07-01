@@ -162,6 +162,16 @@ export function VoteResults({
       return;
     }
 
+    // データに変更がない場合はアニメーションしない
+    const hasDataChanged = chartData.some((item, index) => {
+      const animatedItem = animatedChartData[index];
+      return !animatedItem || animatedItem.value !== item.value;
+    });
+    
+    if (!hasDataChanged) {
+      return;
+    }
+
     // データ変更時はアニメーション付きで更新
     const startData = [...animatedChartData];
     const duration = 700;
@@ -196,7 +206,7 @@ export function VoteResults({
     };
 
     requestAnimationFrame(animate);
-  }, [chartData, totalVotes, animatedChartData]);
+  }, [chartData, totalVotes]);
 
   // カスタムツールチップ
   const CustomTooltip = ({
