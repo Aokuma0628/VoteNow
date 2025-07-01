@@ -86,11 +86,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
 // 他のHTTPメソッドは許可しない
 export async function POST() {
-  return createMethodNotAllowedError(['GET']);
+  return createMethodNotAllowedError(['GET', 'DELETE', 'PATCH']);
 }
 
 export async function PUT() {
-  return createMethodNotAllowedError(['GET']);
+  return createMethodNotAllowedError(['GET', 'DELETE', 'PATCH']);
 }
 
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -118,6 +118,58 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   }
 }
 
-export async function PATCH() {
-  return createMethodNotAllowedError(['GET']);
+// PATCH /api/polls/[id] - 投票ステータス更新
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+
+    if (typeof id !== 'string') {
+      return createNotFoundError('投票');
+    }
+
+    // リクエストボディを取得
+    const body = await request.json();
+    const { status } = body;
+
+    // バリデーション
+    if (!status || typeof status !== 'string') {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'ステータスが必要です',
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // 有効なステータスかチェック
+    const validStatuses = ['draft', 'active', 'closed'];
+    if (!validStatuses.includes(status)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `無効なステータスです。有効な値: ${validStatuses.join(', ')}`,
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // 投票の存在確認
+    const existingPoll = await pollOperations.findById(id);
+    if (!existingPoll) {
+      return createNotFoundError('投票');
+    }
+
+    // ステータス更新
+    const updatedPoll = await pollOperations.updateStatus(id, status);
+
+    return createSuccessResponse({
+      id: updatedPoll.id,
+      status: updatedPoll.status,
+      updatedAt: updatedPoll.updatedAt,
+    });
+  } catch (error) {
+    console.error('PATCH /api/polls/[id] Error:', error);
+    return createServerError();
+  }
 }
