@@ -62,13 +62,13 @@ export function VoteChart({ vote, className }: VoteChartProps) {
     if (isAnimating) {
       return;
     }
-    
+
     // データに変更がない場合はアニメーションしない
     const hasDataChanged = chartData.some((item, index) => {
       const animatedItem = animatedData[index];
       return !animatedItem || animatedItem.votes !== item.votes;
     });
-    
+
     if (!hasDataChanged) {
       return;
     }
@@ -107,6 +107,7 @@ export function VoteChart({ vote, className }: VoteChartProps) {
     };
 
     requestAnimationFrame(animate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartData, vote.totalVotes]);
 
   // カスタムツールチップ

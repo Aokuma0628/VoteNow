@@ -167,7 +167,7 @@ export function VoteResults({
       const animatedItem = animatedChartData[index];
       return !animatedItem || animatedItem.value !== item.value;
     });
-    
+
     if (!hasDataChanged) {
       return;
     }
@@ -206,6 +206,7 @@ export function VoteResults({
     };
 
     requestAnimationFrame(animate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartData, totalVotes]);
 
   // カスタムツールチップ
