@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  CheckCircle,
-  List,
-  Share2,
-  Trash2,
-  Users,
-  MoreVertical,
-  Download,
-  Settings,
-} from 'lucide-react';
+import { CheckCircle, List, Share2, Trash2, Users, MoreVertical, Settings } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,7 +22,6 @@ interface VoteCardProps {
   onShare?: (voteId: string) => void;
   onDelete?: (voteId: string) => void;
   onStatusChange?: (voteId: string, newStatus: string) => void;
-  onExport?: (voteId: string, format: 'json' | 'csv') => void;
   canDelete?: boolean;
   canManage?: boolean;
 }
@@ -42,7 +32,6 @@ export function VoteCard({
   onShare,
   onDelete,
   onStatusChange,
-  onExport,
   canDelete = false,
   canManage = false,
 }: VoteCardProps) {
@@ -175,21 +164,6 @@ export function VoteCard({
     }
   };
 
-  const handleExport = (format: 'json' | 'csv') => {
-    if (onExport) {
-      onExport(vote.id, format);
-    } else {
-      // フォールバック: APIを直接呼び出してダウンロード
-      const url = `/api/polls/${vote.id}/export?format=${format}`;
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `poll-${vote.id}-export.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
   const handleDelete = () => {
     if (onDelete) {
       onDelete(vote.id);
@@ -303,20 +277,6 @@ export function VoteCard({
                       >
                         <Settings className="h-4 w-4" />
                         {actualStatus === 'active' ? '投票を終了' : '投票を再開'}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleExport('json')}
-                        className="flex items-center gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        JSON形式でエクスポート
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleExport('csv')}
-                        className="flex items-center gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        CSV形式でエクスポート
                       </DropdownMenuItem>
                       {canDelete && <DropdownMenuSeparator />}
                     </>

@@ -128,24 +128,6 @@ export default function Home() {
     [mutate],
   );
 
-  // 投票結果のエクスポート機能
-  const handleExport = useCallback(async (pollId: string, format: 'json' | 'csv') => {
-    try {
-      const url = `/api/polls/${pollId}/export?format=${format}`;
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `poll-${pollId}-export.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast.success(`${format.toUpperCase()}形式でエクスポートしました`);
-    } catch (error) {
-      console.error('エクスポートエラー:', error);
-      toast.error('エクスポートに失敗しました');
-    }
-  }, []);
-
   // エラー表示
   if (isError) {
     return (
@@ -239,7 +221,6 @@ export default function Home() {
                   onShare={handleShare}
                   onDelete={handleDelete}
                   onStatusChange={handleStatusChange}
-                  onExport={handleExport}
                   canDelete={true}
                   canManage={true}
                 />
