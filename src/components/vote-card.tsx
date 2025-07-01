@@ -1,10 +1,17 @@
 'use client';
 
-import { CheckCircle, List, Share2, Trash2, Users } from 'lucide-react';
+import { CheckCircle, List, Share2, Trash2, Users, MoreVertical, Settings } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { PollWithStats } from '@/types/api';
 import { DeletePollDialog } from './delete-poll-dialog';
@@ -14,7 +21,9 @@ interface VoteCardProps {
   hasVoted?: boolean;
   onShare?: (voteId: string) => void;
   onDelete?: (voteId: string) => void;
+  onStatusChange?: (voteId: string, newStatus: string) => void;
   canDelete?: boolean;
+  canManage?: boolean;
 }
 
 export function VoteCard({
@@ -22,7 +31,9 @@ export function VoteCard({
   hasVoted = false,
   onShare,
   onDelete,
+  onStatusChange,
   canDelete = false,
+  canManage = false,
 }: VoteCardProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [displayVotes, setDisplayVotes] = useState(vote.totalVotes);
@@ -147,6 +158,12 @@ export function VoteCard({
     }
   };
 
+  const handleStatusChange = (newStatus: string) => {
+    if (onStatusChange) {
+      onStatusChange(vote.id, newStatus);
+    }
+  };
+
   const handleDelete = () => {
     if (onDelete) {
       onDelete(vote.id);
@@ -242,16 +259,39 @@ export function VoteCard({
             <Button variant="outline" size="icon" onClick={handleShare} title="共有">
               <Share2 className="h-4 w-4" />
             </Button>
-            {canDelete && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setDeleteDialogOpen(true)}
-                title="削除"
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+            {(canDelete || canManage) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" title="管理">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {canManage && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          handleStatusChange(actualStatus === 'active' ? 'closed' : 'active')
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <Settings className="h-4 w-4" />
+                        {actualStatus === 'active' ? '投票を終了' : '投票を再開'}
+                      </DropdownMenuItem>
+                      {canDelete && <DropdownMenuSeparator />}
+                    </>
+                  )}
+                  {canDelete && (
+                    <DropdownMenuItem
+                      onClick={() => setDeleteDialogOpen(true)}
+                      className="flex items-center gap-2 text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      削除
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </CardContent>

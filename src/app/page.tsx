@@ -97,6 +97,37 @@ export default function Home() {
     [mutate],
   );
 
+  // 投票のステータス変更機能
+  const handleStatusChange = useCallback(
+    async (pollId: string, newStatus: string) => {
+      try {
+        const response = await fetch(`/api/polls/${pollId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'ステータス変更に失敗しました');
+        }
+
+        // SWRのキャッシュを更新
+        await mutate('/api/polls');
+
+        const statusText =
+          newStatus === 'active' ? '開始' : newStatus === 'closed' ? '終了' : newStatus;
+        toast.success(`投票を${statusText}しました`);
+      } catch (error) {
+        console.error('ステータス変更エラー:', error);
+        toast.error(error instanceof Error ? error.message : 'ステータス変更に失敗しました');
+      }
+    },
+    [mutate],
+  );
+
   // エラー表示
   if (isError) {
     return (
@@ -189,7 +220,9 @@ export default function Home() {
                   hasVoted={!!votesByPoll[poll.id]}
                   onShare={handleShare}
                   onDelete={handleDelete}
+                  onStatusChange={handleStatusChange}
                   canDelete={true}
+                  canManage={true}
                 />
               ))}
             </div>
