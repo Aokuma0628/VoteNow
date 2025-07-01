@@ -231,14 +231,38 @@ export default function VoteDetailPage() {
   if (!poll) return null; // ローディング中やデータなしの場合
 
   // カテゴリー情報を定義（APIデータから取得できない場合の仮設定）
-  const categoryInfo = {
-    name: poll.category,
-    emoji: '📊',
-    color: {
-      light: 'bg-blue-100 text-blue-800',
-      dark: 'bg-blue-900 text-blue-200',
-    },
+  const getCategoryInfo = (category: string) => {
+    const categoryMap: Record<string, { emoji: string; name: string; color: string }> = {
+      general: {
+        emoji: '📊',
+        name: '一般',
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      },
+      work: {
+        emoji: '💼',
+        name: '仕事',
+        color: 'bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200',
+      },
+      event: {
+        emoji: '🎉',
+        name: 'イベント',
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      },
+      poll: {
+        emoji: '🗳️',
+        name: 'アンケート',
+        color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      },
+      other: {
+        emoji: '📋',
+        name: 'その他',
+        color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+      },
+    };
+    return categoryMap[category] || categoryMap.other;
   };
+
+  const categoryInfo = getCategoryInfo(poll.category);
 
   // 期限チェック
   const isExpired = poll.expiresAt ? new Date() > new Date(poll.expiresAt) : false;
@@ -269,14 +293,7 @@ export default function VoteDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      'gap-1',
-                      categoryInfo.color.light,
-                      'dark:' + categoryInfo.color.dark,
-                    )}
-                  >
+                  <Badge variant="secondary" className={cn('gap-1', categoryInfo.color)}>
                     <span>{categoryInfo.emoji}</span>
                     {categoryInfo.name}
                   </Badge>

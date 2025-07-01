@@ -344,7 +344,7 @@ export default function CreatePage() {
                     }
                     className="mt-2"
                   >
-                    <div className="flex items-center space-x-2 p-3 border border-stone-200 rounded-md">
+                    <div className="flex items-center space-x-2 p-3 border border-stone-200 dark:border-stone-700 rounded-md">
                       <RadioGroupItem value="single" id="single" />
                       <div>
                         <Label htmlFor="single" className="font-medium">
@@ -353,7 +353,7 @@ export default function CreatePage() {
                         <div className="text-sm text-stone-600">1つの選択肢のみ選択可能</div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 border border-stone-200 rounded-md">
+                    <div className="flex items-center space-x-2 p-3 border border-stone-200 dark:border-stone-700 rounded-md">
                       <RadioGroupItem value="multiple" id="multiple" />
                       <div>
                         <Label htmlFor="multiple" className="font-medium">
