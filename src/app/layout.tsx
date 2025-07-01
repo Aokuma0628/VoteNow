@@ -29,7 +29,12 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider defaultTheme="system" storageKey="votenow-theme">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <SWRProvider>
             <VoteProvider>
               {children}

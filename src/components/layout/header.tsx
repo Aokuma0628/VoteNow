@@ -1,9 +1,9 @@
 'use client';
 
-import { Moon, Plus, Sun, Vote } from 'lucide-react';
+import { Plus, Vote } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/providers/theme-provider';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { RealtimeStatusDot } from '@/components/realtime-status';
 
 interface HeaderProps {
@@ -12,8 +12,6 @@ interface HeaderProps {
 }
 
 export function Header({ title, actions }: HeaderProps) {
-  const { resolvedTheme, toggleTheme } = useTheme();
-
   return (
     <header className="backdrop-blur-md border-b transition-all duration-300 bg-white/80 dark:bg-stone-900/80 border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-6 py-4">
@@ -47,19 +45,7 @@ export function Header({ title, actions }: HeaderProps) {
             </Button>
 
             {/* テーマ切り替えボタン */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-              aria-label="テーマ切り替え"
-            >
-              {resolvedTheme === 'dark' ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
+            <ThemeToggle />
           </div>
         </div>
       </div>
