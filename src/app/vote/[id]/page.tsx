@@ -272,66 +272,108 @@ export default function VoteDetailPage() {
     <AppLayout
       headerActions={
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handleShare} title="共有">
-            <Share2 className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleShare}
+            aria-label={`「${poll.title}」を共有`}
+            className="focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 rounded-md"
+          >
+            <Share2 className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       }
     >
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {/* ライブリージョン（投票数の変更を通知） */}
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
+          {isParticipantsAnimating ? `投票数が${displayParticipants}人に更新されました` : ''}
+        </div>
+
         {/* 戻るボタン */}
-        <div className="mb-6">
-          <Button variant="ghost" onClick={() => router.push('/')} size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+        <nav className="mb-6" aria-label="パンくずナビゲーション">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/')}
+            size="sm"
+            aria-label="ホームページに戻る"
+            className="focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 rounded-md"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
             ホームに戻る
           </Button>
-        </div>
+        </nav>
 
         {/* 投票詳細ヘッダー */}
         <Card className="mb-8">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
               <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <Badge variant="secondary" className={cn('gap-1', categoryInfo.color)}>
-                    <span>{categoryInfo.emoji}</span>
-                    {categoryInfo.name}
-                  </Badge>
-                  <Badge variant={poll.status === 'active' ? 'default' : 'destructive'}>
-                    {poll.status === 'active' ? '進行中' : '終了'}
-                  </Badge>
-                  {userHasVoted && (
+                <header className="mb-6">
+                  <div
+                    className="flex flex-wrap items-center gap-3 mb-3"
+                    role="group"
+                    aria-label="投票情報"
+                  >
                     <Badge
                       variant="secondary"
-                      className="bg-emerald-100 text-emerald-700 border-emerald-200"
+                      className={cn('gap-1', categoryInfo.color)}
+                      aria-label={`カテゴリー: ${categoryInfo.name}`}
                     >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      投票済み
+                      <span aria-hidden="true">{categoryInfo.emoji}</span>
+                      {categoryInfo.name}
                     </Badge>
+                    <Badge
+                      variant={poll.status === 'active' ? 'default' : 'destructive'}
+                      aria-label={`投票状態: ${poll.status === 'active' ? '進行中' : '終了'}`}
+                    >
+                      {poll.status === 'active' ? '進行中' : '終了'}
+                    </Badge>
+                    {userHasVoted && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-emerald-100 text-emerald-700 border-emerald-200"
+                        aria-label="この投票にはすでに投票済みです"
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />
+                        投票済み
+                      </Badge>
+                    )}
+                  </div>
+                  <h1 className="text-2xl font-bold mb-3" id="poll-title">
+                    {poll.title}
+                  </h1>
+                  {poll.description && (
+                    <p
+                      className="text-stone-600 dark:text-stone-400 leading-relaxed"
+                      id="poll-description"
+                      aria-describedby="poll-title"
+                    >
+                      {poll.description}
+                    </p>
                   )}
-                </div>
-                <h1 className="text-2xl font-bold mb-3">{poll.title}</h1>
-                {poll.description && (
-                  <p className="text-stone-600 dark:text-stone-400 leading-relaxed">
-                    {poll.description}
-                  </p>
-                )}
+                </header>
               </div>
             </div>
 
             {/* 参加者数表示 */}
-            <div className="mt-4 flex items-center gap-2 text-stone-600 dark:text-stone-400">
+            <div
+              className="mt-4 flex items-center gap-2 text-stone-600 dark:text-stone-400"
+              aria-label="投票参加者数"
+            >
               <Users
                 className={cn(
                   'h-5 w-5',
                   isParticipantsAnimating && 'animate-vote-pulse text-blue-600 dark:text-blue-400',
                 )}
+                aria-hidden="true"
               />
               <span
                 className={cn(
                   'font-medium transition-all duration-300',
                   isParticipantsAnimating && 'text-lg text-blue-600 dark:text-blue-400',
                 )}
+                aria-live="polite"
               >
                 {displayParticipants}人が参加
               </span>
@@ -341,18 +383,26 @@ export default function VoteDetailPage() {
               {poll.status === 'active' && !isExpired && poll.expiresAt && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                    <Clock className="h-4 w-4" />
-                    <span className="font-medium">
+                    <Clock className="h-4 w-4" aria-hidden="true" />
+                    <time
+                      dateTime={poll.expiresAt}
+                      className="font-medium"
+                      aria-label={`投票期限: ${new Date(poll.expiresAt).toLocaleDateString('ja-JP')} ${new Date(poll.expiresAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`}
+                    >
                       期限: {new Date(poll.expiresAt).toLocaleDateString('ja-JP')}{' '}
                       {new Date(poll.expiresAt).toLocaleTimeString('ja-JP', {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
-                    </span>
+                    </time>
                   </div>
                 </div>
               )}
-              <div className="bg-stone-50 dark:bg-stone-900/20 border border-stone-200 dark:border-stone-800 rounded-lg p-4 flex items-center justify-center">
+              <div
+                className="bg-stone-50 dark:bg-stone-900/20 border border-stone-200 dark:border-stone-800 rounded-lg p-4 flex items-center justify-center"
+                role="status"
+                aria-label="リアルタイム接続状態"
+              >
                 <RealtimeStatus />
               </div>
             </div>
@@ -362,93 +412,135 @@ export default function VoteDetailPage() {
         {/* メインコンテンツ - 3カラムレイアウト */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* メイン投票/結果エリア - 2カラム分 */}
-          <div className="lg:col-span-2">
+          <section className="lg:col-span-2" aria-labelledby="poll-title">
             {/* 投票フォーム */}
             {canVote && !showResults && (
               <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle>投票してください</CardTitle>
+                  <CardTitle id="vote-form-title">投票してください</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {poll.allowMultiple ? (
-                      // 複数選択の場合：Checkboxを使用
-                      poll.options.map(option => (
-                        <label
-                          key={option.id}
-                          className={cn(
-                            'block p-4 rounded-lg border cursor-pointer transition-all duration-200',
-                            'hover:bg-stone-50 dark:hover:bg-stone-800',
-                            selectedOptions.includes(option.id)
-                              ? 'bg-blue-50 border-blue-500 dark:bg-blue-900/20 dark:border-blue-400'
-                              : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700',
-                          )}
-                          onClick={() => handleOptionSelect(option.id)}
-                        >
-                          <div className="flex items-start gap-3">
-                            <Checkbox
-                              checked={selectedOptions.includes(option.id)}
-                              onCheckedChange={() => {}}
-                              className="mt-0.5"
-                            />
-                            <div className="flex-1">
-                              <div className="font-medium">{option.text}</div>
-                              {option.description && (
-                                <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">
-                                  {option.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </label>
-                      ))
-                    ) : (
-                      // 単一選択の場合：RadioGroupを使用
-                      <RadioGroup
-                        value={selectedOptions[0] || ''}
-                        onValueChange={value => setSelectedOptions([value])}
-                      >
-                        {poll.options.map(option => (
+                  <form
+                    role="form"
+                    aria-labelledby="vote-form-title"
+                    aria-describedby="poll-description"
+                    onSubmit={e => {
+                      e.preventDefault();
+                      handleVoteSubmit();
+                    }}
+                  >
+                    <fieldset className="space-y-4">
+                      <legend className="sr-only">
+                        {poll.allowMultiple
+                          ? '複数選択可能な選択肢から選んでください'
+                          : '一つの選択肢を選んでください'}
+                      </legend>
+                      {poll.allowMultiple ? (
+                        // 複数選択の場合：Checkboxを使用
+                        poll.options.map((option, _index) => (
                           <div
                             key={option.id}
                             className={cn(
-                              'block p-4 rounded-lg border cursor-pointer transition-all duration-200',
-                              'hover:bg-stone-50 dark:hover:bg-stone-800',
+                              'block p-4 rounded-lg border transition-all duration-200',
+                              'hover:bg-stone-50 dark:hover:bg-stone-800 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2',
                               selectedOptions.includes(option.id)
                                 ? 'bg-blue-50 border-blue-500 dark:bg-blue-900/20 dark:border-blue-400'
                                 : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700',
                             )}
                           >
                             <label
-                              htmlFor={option.id}
+                              htmlFor={`option-${option.id}`}
                               className="flex items-start gap-3 cursor-pointer"
                             >
-                              <RadioGroupItem value={option.id} id={option.id} className="mt-0.5" />
+                              <Checkbox
+                                id={`option-${option.id}`}
+                                checked={selectedOptions.includes(option.id)}
+                                onCheckedChange={() => handleOptionSelect(option.id)}
+                                className="mt-0.5"
+                                aria-describedby={
+                                  option.description ? `option-desc-${option.id}` : undefined
+                                }
+                              />
                               <div className="flex-1">
                                 <div className="font-medium">{option.text}</div>
                                 {option.description && (
-                                  <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">
+                                  <p
+                                    id={`option-desc-${option.id}`}
+                                    className="text-sm text-stone-600 dark:text-stone-400 mt-1"
+                                  >
                                     {option.description}
                                   </p>
                                 )}
                               </div>
                             </label>
                           </div>
-                        ))}
-                      </RadioGroup>
-                    )}
+                        ))
+                      ) : (
+                        // 単一選択の場合：RadioGroupを使用
+                        <RadioGroup
+                          value={selectedOptions[0] || ''}
+                          onValueChange={value => setSelectedOptions([value])}
+                          aria-label="投票選択肢"
+                          aria-required="true"
+                        >
+                          {poll.options.map((option, _index) => (
+                            <div
+                              key={option.id}
+                              className={cn(
+                                'block p-4 rounded-lg border transition-all duration-200',
+                                'hover:bg-stone-50 dark:hover:bg-stone-800 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2',
+                                selectedOptions.includes(option.id)
+                                  ? 'bg-blue-50 border-blue-500 dark:bg-blue-900/20 dark:border-blue-400'
+                                  : 'bg-white dark:bg-gray-800 border-stone-200 dark:border-stone-700',
+                              )}
+                            >
+                              <label
+                                htmlFor={option.id}
+                                className="flex items-start gap-3 cursor-pointer"
+                              >
+                                <RadioGroupItem
+                                  value={option.id}
+                                  id={option.id}
+                                  className="mt-0.5"
+                                  aria-describedby={
+                                    option.description ? `radio-desc-${option.id}` : undefined
+                                  }
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium">{option.text}</div>
+                                  {option.description && (
+                                    <p
+                                      id={`radio-desc-${option.id}`}
+                                      className="text-sm text-stone-600 dark:text-stone-400 mt-1"
+                                    >
+                                      {option.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      )}
 
-                    <div className="flex justify-center pt-4">
-                      <Button
-                        onClick={handleVoteSubmit}
-                        disabled={selectedOptions.length === 0 || isSubmitting}
-                        className="px-8"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        投票する
-                      </Button>
-                    </div>
-                  </div>
+                      <div className="flex justify-center pt-4">
+                        <Button
+                          type="submit"
+                          disabled={selectedOptions.length === 0 || isSubmitting}
+                          className="px-8 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                          aria-describedby={selectedOptions.length === 0 ? 'vote-error' : undefined}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" aria-hidden="true" />
+                          投票する
+                        </Button>
+                      </div>
+                      {selectedOptions.length === 0 && (
+                        <div id="vote-error" role="alert" aria-live="polite" className="sr-only">
+                          投票するには選択肢を選んでください
+                        </div>
+                      )}
+                    </fieldset>
+                  </form>
                 </CardContent>
               </Card>
             )}
@@ -509,10 +601,10 @@ export default function VoteDetailPage() {
                 </CardContent>
               </Card>
             )}
-          </div>
+          </section>
 
           {/* サイドバー - 1カラム分 */}
-          <div className="space-y-6">
+          <aside className="space-y-6" aria-label="投票情報サイドバー">
             {/* 投票統計 */}
             <Card>
               <CardHeader>
@@ -596,9 +688,9 @@ export default function VoteDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </aside>
         </div>
-      </div>
+      </main>
 
       {/* 投票確認モーダル */}
       <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>

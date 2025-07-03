@@ -277,167 +277,210 @@ export default function CreatePage() {
             </Card>
 
             {/* 選択肢セクション */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <List className="h-5 w-5 text-emerald-600" />
-                  選択肢
-                  <span className="text-sm font-normal text-stone-500">（最低2つ、最大10個）</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {formData.options.map((option, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={option}
-                        onChange={e => updateOption(index, e.target.value)}
-                        placeholder={`選択肢 ${index + 1}`}
-                        maxLength={100}
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeOption(index)}
-                        disabled={formData.options.length <= 2}
-                        className="text-stone-400 hover:text-red-600"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+            <fieldset>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2" id="options-title">
+                    <List className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                    選択肢
+                    <span className="text-sm font-normal text-stone-500">
+                      （最低2つ、最大10個）
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3" role="group" aria-labelledby="options-title">
+                    {formData.options.map((option, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          id={`option-${index}`}
+                          value={option}
+                          onChange={e => updateOption(index, e.target.value)}
+                          placeholder={`選択肢 ${index + 1}`}
+                          maxLength={100}
+                          className="flex-1"
+                          aria-label={`選択肢 ${index + 1}`}
+                          aria-describedby={`option-help-${index}`}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeOption(index)}
+                          disabled={formData.options.length <= 2}
+                          className="text-stone-400 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                          aria-label={`選択肢 ${index + 1} を削除`}
+                        >
+                          <Minus className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <span id={`option-help-${index}`} className="sr-only">
+                          最大100文字まで入力可能
+                        </span>
+                      </div>
+                    ))}
+                  </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addOption}
-                  disabled={formData.options.length >= 10}
-                  className="w-full border-2 border-dashed border-stone-300 hover:border-stone-400 text-stone-600 hover:text-stone-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  選択肢を追加
-                </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addOption}
+                    disabled={formData.options.length >= 10}
+                    className="w-full border-2 border-dashed border-stone-300 hover:border-stone-400 text-stone-600 hover:text-stone-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                    aria-describedby="add-option-help"
+                  >
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+                    選択肢を追加
+                  </Button>
+                  <span id="add-option-help" className="sr-only">
+                    選択肢は最大10個まで追加できます
+                  </span>
 
-                {errors.options && <span className="text-sm text-red-600">{errors.options}</span>}
-              </CardContent>
-            </Card>
+                  {errors.options && (
+                    <span className="text-sm text-red-600" role="alert" aria-live="polite">
+                      {errors.options}
+                    </span>
+                  )}
+                </CardContent>
+              </Card>
+            </fieldset>
 
             {/* 設定セクション */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-emerald-600" />
-                  投票設定
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* 投票方式 */}
-                <div>
-                  <Label className="text-base">投票方式</Label>
-                  <RadioGroup
-                    value={formData.allowMultiple ? 'multiple' : 'single'}
-                    onValueChange={value =>
-                      setFormData(prev => ({ ...prev, allowMultiple: value === 'multiple' }))
-                    }
-                    className="mt-2"
-                  >
-                    <div className="flex items-center space-x-2 p-3 border border-stone-200 dark:border-stone-700 rounded-md">
-                      <RadioGroupItem value="single" id="single" />
-                      <div>
-                        <Label htmlFor="single" className="font-medium">
-                          単一選択
-                        </Label>
-                        <div className="text-sm text-stone-600">1つの選択肢のみ選択可能</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2 p-3 border border-stone-200 dark:border-stone-700 rounded-md">
-                      <RadioGroupItem value="multiple" id="multiple" />
-                      <div>
-                        <Label htmlFor="multiple" className="font-medium">
-                          複数選択
-                        </Label>
-                        <div className="text-sm text-stone-600">複数の選択肢を選択可能</div>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {/* 期限設定 */}
-                <div>
-                  <Label htmlFor="expires">投票期限</Label>
-                  <Input
-                    id="expires"
-                    type="datetime-local"
-                    value={formData.expiresAt}
-                    onChange={e => setFormData(prev => ({ ...prev, expiresAt: e.target.value }))}
-                    placeholder="yyyy-MM-dd HH:mm"
-                    className="mt-1"
-                  />
-                  <div className="text-xs text-stone-500 mt-1">
-                    未設定の場合は1週間後に自動設定されます
-                  </div>
-                </div>
-
-                {/* オプション設定 */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="allowAddOptions" className="font-medium">
-                        選択肢の追加を許可
-                      </Label>
-                      <div className="text-sm text-stone-600">
-                        投票者が新しい選択肢を追加できるようにします
-                      </div>
-                    </div>
-                    <Switch
-                      id="allowAddOptions"
-                      checked={formData.allowAddOptions}
-                      onCheckedChange={checked =>
-                        setFormData(prev => ({ ...prev, allowAddOptions: checked }))
+            <fieldset>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2" id="settings-title">
+                    <Settings className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                    投票設定
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* 投票方式 */}
+                  <div>
+                    <Label className="text-base" id="vote-type-label">
+                      投票方式
+                    </Label>
+                    <RadioGroup
+                      value={formData.allowMultiple ? 'multiple' : 'single'}
+                      onValueChange={value =>
+                        setFormData(prev => ({ ...prev, allowMultiple: value === 'multiple' }))
                       }
-                    />
+                      className="mt-2"
+                      aria-labelledby="vote-type-label"
+                    >
+                      <div className="flex items-center space-x-2 p-3 border border-stone-200 dark:border-stone-700 rounded-md focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2">
+                        <RadioGroupItem value="single" id="single" />
+                        <div>
+                          <Label htmlFor="single" className="font-medium cursor-pointer">
+                            単一選択
+                          </Label>
+                          <div className="text-sm text-stone-600">1つの選択肢のみ選択可能</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 border border-stone-200 dark:border-stone-700 rounded-md focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2">
+                        <RadioGroupItem value="multiple" id="multiple" />
+                        <div>
+                          <Label htmlFor="multiple" className="font-medium cursor-pointer">
+                            複数選択
+                          </Label>
+                          <div className="text-sm text-stone-600">複数の選択肢を選択可能</div>
+                        </div>
+                      </div>
+                    </RadioGroup>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="isPublic" className="font-medium">
-                        公開投票
-                      </Label>
-                      <div className="text-sm text-stone-600">
-                        誰でも投票に参加できるようにします
-                      </div>
-                    </div>
-                    <Switch
-                      id="isPublic"
-                      checked={formData.isPublic}
-                      onCheckedChange={checked =>
-                        setFormData(prev => ({ ...prev, isPublic: checked }))
-                      }
+                  {/* 期限設定 */}
+                  <div>
+                    <Label htmlFor="expires">投票期限（任意）</Label>
+                    <Input
+                      id="expires"
+                      type="datetime-local"
+                      value={formData.expiresAt}
+                      onChange={e => setFormData(prev => ({ ...prev, expiresAt: e.target.value }))}
+                      placeholder="yyyy-MM-dd HH:mm"
+                      className="mt-1"
+                      aria-describedby="expires-help"
                     />
+                    <div id="expires-help" className="text-xs text-stone-500 mt-1">
+                      未設定の場合は1週間後に自動設定されます
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  {/* オプション設定 */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 border border-stone-200 dark:border-stone-700 rounded-md focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2">
+                      <div>
+                        <Label htmlFor="allowAddOptions" className="font-medium cursor-pointer">
+                          選択肢の追加を許可
+                        </Label>
+                        <div className="text-sm text-stone-600">
+                          投票者が新しい選択肢を追加できるようにします
+                        </div>
+                      </div>
+                      <Switch
+                        id="allowAddOptions"
+                        checked={formData.allowAddOptions}
+                        onCheckedChange={checked =>
+                          setFormData(prev => ({ ...prev, allowAddOptions: checked }))
+                        }
+                        aria-describedby="allowAddOptions-desc"
+                      />
+                      <span id="allowAddOptions-desc" className="sr-only">
+                        現在{formData.allowAddOptions ? '有効' : '無効'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 border border-stone-200 dark:border-stone-700 rounded-md focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2">
+                      <div>
+                        <Label htmlFor="isPublic" className="font-medium cursor-pointer">
+                          公開投票
+                        </Label>
+                        <div className="text-sm text-stone-600">
+                          誰でも投票に参加できるようにします
+                        </div>
+                      </div>
+                      <Switch
+                        id="isPublic"
+                        checked={formData.isPublic}
+                        onCheckedChange={checked =>
+                          setFormData(prev => ({ ...prev, isPublic: checked }))
+                        }
+                        aria-describedby="isPublic-desc"
+                      />
+                      <span id="isPublic-desc" className="sr-only">
+                        現在{formData.isPublic ? '有効' : '無効'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </fieldset>
 
             {/* アクションボタン */}
             <div className="flex justify-center">
-              <Button type="submit" disabled={!isFormValid || isSubmitting}>
+              <Button
+                type="submit"
+                disabled={!isFormValid || isSubmitting}
+                className="focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                aria-describedby={!isFormValid ? 'form-validation-status' : undefined}
+              >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    作成中...
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                    <span aria-live="polite">作成中...</span>
                   </>
                 ) : (
                   <>
-                    <Rocket className="h-4 w-4 mr-2" />
+                    <Rocket className="h-4 w-4 mr-2" aria-hidden="true" />
                     投票を作成
                   </>
                 )}
               </Button>
             </div>
+            {!isFormValid && (
+              <div id="form-validation-status" className="sr-only" role="status" aria-live="polite">
+                フォームに不備があります。必須項目を確認してください。
+              </div>
+            )}
           </form>
         </div>
       </div>
