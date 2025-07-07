@@ -27,7 +27,7 @@ export function ShareMenu({
   variant = 'outline',
   size = 'icon',
 }: ShareMenuProps) {
-  const shareUrl = url || typeof window !== 'undefined' ? window.location.href : '';
+  const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
   const shareText = `${title} - ${description}`;
 
   const handleNativeShare = async () => {

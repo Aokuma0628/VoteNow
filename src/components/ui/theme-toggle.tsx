@@ -14,6 +14,25 @@ import {
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <Button
+        variant="outline"
+        size="icon"
+        disabled
+        aria-label="テーマ切り替えを読み込み中"
+        className="focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+      >
+        <Monitor className="h-[1.2rem] w-[1.2rem]" aria-hidden="true" />
+      </Button>
+    );
+  }
 
   const getCurrentThemeName = () => {
     switch (theme) {
@@ -24,7 +43,7 @@ export function ThemeToggle() {
       case 'system':
         return 'システムテーマ';
       default:
-        return 'テーマ';
+        return 'システムテーマ';
     }
   };
 
