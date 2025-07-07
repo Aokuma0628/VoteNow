@@ -23,25 +23,26 @@ interface ResultShareProps {
 export function ResultShare({ title, description, options, totalVotes }: ResultShareProps) {
   const formatResultsText = () => {
     const sortedOptions = [...options].sort((a, b) => b._count.votes - a._count.votes);
-    
+
     let resultText = `📊 ${title}\n`;
     if (description) {
       resultText += `${description}\n`;
     }
     resultText += `\n総投票数: ${totalVotes}票\n\n`;
-    
+
     if (totalVotes === 0) {
       resultText += 'まだ投票がありません。\n';
     } else {
       resultText += '📈 結果:\n';
       sortedOptions.forEach((option, index) => {
-        const percentage = totalVotes > 0 ? ((option._count.votes / totalVotes) * 100).toFixed(1) : '0.0';
+        const percentage =
+          totalVotes > 0 ? ((option._count.votes / totalVotes) * 100).toFixed(1) : '0.0';
         const rank = index + 1;
         const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
         resultText += `${medal} ${option.text}: ${option._count.votes}票 (${percentage}%)\n`;
       });
     }
-    
+
     resultText += `\n投票はこちら: ${typeof window !== 'undefined' ? window.location.href : ''}`;
     return resultText;
   };
@@ -71,26 +72,22 @@ export function ResultShare({ title, description, options, totalVotes }: ResultS
     toast.success('結果をダウンロードしました');
   };
 
-  const shareDescription = totalVotes > 0 
-    ? `${options.length}つの選択肢で${totalVotes}票の投票結果をご覧ください！`
-    : '投票に参加してください！';
+  const shareDescription =
+    totalVotes > 0
+      ? `${options.length}つの選択肢で${totalVotes}票の投票結果をご覧ください！`
+      : '投票に参加してください！';
 
   return (
     <div className="flex items-center gap-2">
       {/* 通常の共有メニュー */}
-      <ShareMenu 
-        title={title}
-        description={shareDescription}
-        variant="outline"
-        size="sm"
-      />
-      
+      <ShareMenu title={title} description={shareDescription} variant="outline" size="sm" />
+
       {/* 結果共有メニュー */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             aria-label="投票結果を共有・ダウンロード"
             className="focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
           >
@@ -99,15 +96,15 @@ export function ResultShare({ title, description, options, totalVotes }: ResultS
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={handleCopyResults}
             className="flex items-center gap-2 cursor-pointer"
           >
             <FileText className="h-4 w-4" />
             結果をコピー
           </DropdownMenuItem>
-          
-          <DropdownMenuItem 
+
+          <DropdownMenuItem
             onClick={handleDownloadResults}
             className="flex items-center gap-2 cursor-pointer"
           >

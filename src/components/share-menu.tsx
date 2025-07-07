@@ -20,18 +20,18 @@ interface ShareMenuProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
-export function ShareMenu({ 
-  title, 
-  description = '投票に参加してください！', 
+export function ShareMenu({
+  title,
+  description = '投票に参加してください！',
   url,
   variant = 'outline',
-  size = 'icon'
+  size = 'icon',
 }: ShareMenuProps) {
   const shareUrl = url || typeof window !== 'undefined' ? window.location.href : '';
   const shareText = `${title} - ${description}`;
 
   const handleNativeShare = async () => {
-    if (navigator.share) {
+    if ('share' in navigator) {
       try {
         await navigator.share({
           title,
@@ -77,9 +77,9 @@ export function ShareMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant={variant} 
-          size={size} 
+        <Button
+          variant={variant}
+          size={size}
           aria-label="投票を共有"
           className="focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
         >
@@ -89,9 +89,9 @@ export function ShareMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {/* ネイティブ共有 */}
-        {typeof window !== 'undefined' && navigator.share && (
+        {typeof window !== 'undefined' && 'share' in navigator && (
           <>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={handleNativeShare}
               className="flex items-center gap-2 cursor-pointer"
             >
@@ -101,36 +101,36 @@ export function ShareMenu({
             <DropdownMenuSeparator />
           </>
         )}
-        
+
         {/* リンクコピー */}
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={handleCopyLink}
           className="flex items-center gap-2 cursor-pointer"
         >
           <Link2 className="h-4 w-4" />
           リンクをコピー
         </DropdownMenuItem>
-        
+
         <DropdownMenuSeparator />
-        
+
         {/* SNS共有 */}
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={handleTwitterShare}
           className="flex items-center gap-2 cursor-pointer"
         >
           <Twitter className="h-4 w-4" />
           Twitterで共有
         </DropdownMenuItem>
-        
-        <DropdownMenuItem 
+
+        <DropdownMenuItem
           onClick={handleFacebookShare}
           className="flex items-center gap-2 cursor-pointer"
         >
           <Facebook className="h-4 w-4" />
           Facebookで共有
         </DropdownMenuItem>
-        
-        <DropdownMenuItem 
+
+        <DropdownMenuItem
           onClick={handleMailShare}
           className="flex items-center gap-2 cursor-pointer"
         >

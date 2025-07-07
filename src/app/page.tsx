@@ -43,35 +43,6 @@ export default function Home() {
     };
   }, [polls, total]);
 
-  // 投票の共有機能
-  const handleShare = async (pollId: string) => {
-    const poll = polls.find(p => p.id === pollId);
-    if (!poll) return;
-
-    const url = `${window.location.origin}/vote/${pollId}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: poll.title,
-          text: poll.description || '投票に参加してください！',
-          url: url,
-        });
-      } catch {
-        // ユーザーがキャンセルした場合など
-        console.log('共有がキャンセルされました');
-      }
-    } else {
-      // Web Share API が利用できない場合はクリップボードにコピー
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.success('リンクをコピーしました');
-      } catch (error) {
-        console.error('クリップボードへのコピーに失敗しました:', error);
-      }
-    }
-  };
-
   // 投票の削除機能
   const handleDelete = useCallback(
     async (pollId: string) => {
@@ -218,7 +189,6 @@ export default function Home() {
                   key={poll.id}
                   vote={poll}
                   hasVoted={!!votesByPoll[poll.id]}
-                  onShare={handleShare}
                   onDelete={handleDelete}
                   onStatusChange={handleStatusChange}
                   canDelete={true}

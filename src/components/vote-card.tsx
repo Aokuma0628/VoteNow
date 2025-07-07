@@ -143,7 +143,6 @@ export function VoteCard({
 
   const actualStatus = getActualStatus();
 
-
   const handleStatusChange = (newStatus: string) => {
     if (onStatusChange) {
       onStatusChange(vote.id, newStatus);
@@ -255,7 +254,7 @@ export function VoteCard({
               className="text-xs text-stone-400 dark:text-stone-500 mb-4"
               aria-label="投票の作成日時と状態"
             >
-              <time dateTime={vote.createdAt}>
+              <time dateTime={vote.createdAt.toISOString()}>
                 作成:{' '}
                 {new Date(vote.createdAt).toLocaleDateString('ja-JP', {
                   month: 'short',
@@ -292,7 +291,7 @@ export function VoteCard({
                   </a>
                 </Button>
               )}
-              <ShareMenu 
+              <ShareMenu
                 title={vote.title}
                 description={vote.description || '投票に参加してください！'}
                 url={`${typeof window !== 'undefined' ? window.location.origin : ''}/vote/${vote.id}`}

@@ -107,7 +107,6 @@ export default function VoteDetailPage() {
     }
   }, [poll, userHasVoted]);
 
-
   const handleVoteSubmit = async () => {
     if (selectedOptions.length === 0) return;
 
@@ -258,7 +257,7 @@ export default function VoteDetailPage() {
     <AppLayout
       headerActions={
         <div className="flex items-center gap-2">
-          <ShareMenu 
+          <ShareMenu
             title={poll.title}
             description={poll.description || '投票に参加してください！'}
           />
@@ -366,7 +365,7 @@ export default function VoteDetailPage() {
                   <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
                     <Clock className="h-4 w-4" aria-hidden="true" />
                     <time
-                      dateTime={poll.expiresAt}
+                      dateTime={poll.expiresAt.toISOString()}
                       className="font-medium"
                       aria-label={`投票期限: ${new Date(poll.expiresAt).toLocaleDateString('ja-JP')} ${new Date(poll.expiresAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`}
                     >
@@ -561,13 +560,18 @@ export default function VoteDetailPage() {
                     <div className="flex items-center justify-between">
                       <CardTitle>詳細結果</CardTitle>
                       <div className="flex items-center gap-2">
-                        <ResultShare 
+                        <ResultShare
                           title={poll.title}
-                          description={poll.description}
+                          description={poll.description || undefined}
                           options={poll.options}
                           totalVotes={poll.totalVotes}
                         />
-                        <Button variant="ghost" size="sm" onClick={refreshResults} title="結果を更新">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={refreshResults}
+                          title="結果を更新"
+                        >
                           <RefreshCw className="h-4 w-4" />
                         </Button>
                       </div>
