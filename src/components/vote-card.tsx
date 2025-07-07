@@ -1,6 +1,7 @@
 'use client';
 
-import { CheckCircle, List, Share2, Trash2, Users, MoreVertical, Settings } from 'lucide-react';
+import { CheckCircle, List, Trash2, Users, MoreVertical, Settings } from 'lucide-react';
+import { ShareMenu } from '@/components/share-menu';
 import { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,7 @@ import { DeletePollDialog } from './delete-poll-dialog';
 interface VoteCardProps {
   vote: PollWithStats;
   hasVoted?: boolean;
-  onShare?: (voteId: string) => void;
+  _onShare?: (voteId: string) => void;
   onDelete?: (voteId: string) => void;
   onStatusChange?: (voteId: string, newStatus: string) => void;
   canDelete?: boolean;
@@ -29,7 +30,7 @@ interface VoteCardProps {
 export function VoteCard({
   vote,
   hasVoted = false,
-  onShare,
+  _onShare,
   onDelete,
   onStatusChange,
   canDelete = false,
@@ -142,18 +143,6 @@ export function VoteCard({
 
   const actualStatus = getActualStatus();
 
-  const handleShare = () => {
-    if (onShare) {
-      onShare(vote.id);
-    } else {
-      // フォールバック: URLをクリップボードにコピー
-      const url = `${window.location.origin}/vote/${vote.id}`;
-      navigator.clipboard.writeText(url).then(() => {
-        // 通知を表示（実装に応じて）
-        console.log('リンクをコピーしました');
-      });
-    }
-  };
 
   const handleStatusChange = (newStatus: string) => {
     if (onStatusChange) {
@@ -303,15 +292,11 @@ export function VoteCard({
                   </a>
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleShare}
-                aria-label={`「${vote.title}」を共有`}
-                className="focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 rounded-md"
-              >
-                <Share2 className="h-4 w-4" aria-hidden="true" />
-              </Button>
+              <ShareMenu 
+                title={vote.title}
+                description={vote.description || '投票に参加してください！'}
+                url={`${typeof window !== 'undefined' ? window.location.origin : ''}/vote/${vote.id}`}
+              />
               {(canDelete || canManage) && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

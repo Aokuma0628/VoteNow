@@ -7,12 +7,13 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Share2,
   RefreshCw,
   HelpCircle,
   Loader2,
   Users,
 } from 'lucide-react';
+import { ShareMenu } from '@/components/share-menu';
+import { ResultShare } from '@/components/result-share';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -106,21 +107,6 @@ export default function VoteDetailPage() {
     }
   }, [poll, userHasVoted]);
 
-  const handleShare = () => {
-    const url = window.location.href;
-
-    if (navigator.share) {
-      navigator.share({
-        title: poll?.title || '投票',
-        text: poll?.description || '投票に参加してください！',
-        url: url,
-      });
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        toast.success('リンクをコピーしました');
-      });
-    }
-  };
 
   const handleVoteSubmit = async () => {
     if (selectedOptions.length === 0) return;
@@ -272,15 +258,10 @@ export default function VoteDetailPage() {
     <AppLayout
       headerActions={
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleShare}
-            aria-label={`「${poll.title}」を共有`}
-            className="focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 rounded-md"
-          >
-            <Share2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
+          <ShareMenu 
+            title={poll.title}
+            description={poll.description || '投票に参加してください！'}
+          />
         </div>
       }
     >
@@ -579,9 +560,17 @@ export default function VoteDetailPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle>詳細結果</CardTitle>
-                      <Button variant="ghost" size="sm" onClick={refreshResults} title="結果を更新">
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <ResultShare 
+                          title={poll.title}
+                          description={poll.description}
+                          options={poll.options}
+                          totalVotes={poll.totalVotes}
+                        />
+                        <Button variant="ghost" size="sm" onClick={refreshResults} title="結果を更新">
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
